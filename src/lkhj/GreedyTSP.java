@@ -5,18 +5,18 @@ package lkhj;
  * A greedy algorithm for TSP problem
  * Created by xinyun on 03/07/17.
  */
-public class GreedyTSP {
+class GreedyTSP {
     private double[][] costMatrix;
     private int[] tour;
     private boolean[] isInTour;
 
-    public GreedyTSP(double[][] costMatrix){
+    GreedyTSP(double[][] costMatrix){
         this.costMatrix = costMatrix;
         tour = new int[costMatrix.length];
         isInTour = new boolean[costMatrix.length];
     }
 
-    public int[] solve(){
+    int[] solve(){
         tour[0] = 0;
         isInTour[0] = true;
         int count = 1;
