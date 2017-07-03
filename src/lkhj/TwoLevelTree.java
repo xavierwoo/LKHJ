@@ -7,105 +7,16 @@ import java.util.Random;
  * solve fractional TSP using two level tree structure
  * Created by Xavier on 2017/6/6.
  */
-public class TwoLevelTree {
+class TwoLevelTree {
 
-    private class Parent {
-        int ID;
-        int size = 0;
-        boolean isReverse = false;
-        Parent previousParent;
-        Parent nextParent;
-        Element beginElement = null;
-        Element endElement = null;
-
-        //boolean isAbandoned = false;
-
-        @Override
-        public String toString() {
-            return isReverse ? endElement.toString() + '-' + beginElement.toString()
-                    : beginElement.toString() + '-' + endElement.toString();
-        }
-
-        private void addElementToLast(Element element) {
-            if (size == 0) {
-                beginElement = element;
-                endElement = element;
-            } else {
-                endElement.nextElement = element;
-                element.previousElement = endElement;
-                endElement = element;
-            }
-            element.ID = size++;
-            element.parent = this;
-        }
-
-        private boolean checkElementRelation() {
-            Element element = isReverse ? endElement : beginElement;
-            int count = 1;
-
-            while(element != (isReverse ? beginElement : endElement)){
-                if (count > size){
-                    System.err.println("tour element number error 1");
-                    return false;
-                }
-                if (element.parent != this){
-                    System.err.println("tour element number error 2");
-                    return false;
-                }
-                Element followElem = isReverse ? element.previousElement : element.nextElement;
-
-                if (isReverse ?
-                        element.ID <= followElem.ID : element.ID >= followElem.ID) {
-                    System.err.println("tour element number error 3");
-                    return false;
-                }
-
-                element = followElem;
-                ++count;
-            }
-
-            return element.parent == this && count == size;
-        }
-
-        private boolean pathLiesIn(int a, int c) {
-            if (isReverse) {
-                return between(endElement.previousElement.cityID, a, c)
-                        &&
-                        between(a, c, beginElement.nextElement.cityID);
-            } else {
-                return between(beginElement.previousElement.cityID, a, c)
-                        &&
-                        between(a, c, endElement.nextElement.cityID);
-            }
-        }
-    }
-
-    private class Element {
-        int ID;
-        final int cityID;
-        Parent parent;
-        Element previousElement;
-        Element nextElement;
-
-        private Element(int cityID) {
-            this.cityID = cityID;
-        }
-
-        @Override
-        public String toString() {
-            return Integer.toString(cityID);
-        }
-    }
-
+    final private double lower;
+    final private double upper;
     private Element[] citysElements;
     private int parentsNum = 0;
     private Parent headParent = null;
 
 
-    final private double lower;
-    final private double upper;
-
-    public TwoLevelTree(int[] tour) {
+    TwoLevelTree(int[] tour) {
 
         //initialize all city segments
         citysElements = new Element[tour.length];
@@ -135,32 +46,6 @@ public class TwoLevelTree {
             headParent = headParent.previousParent;
             reSortAllParentID();
         }
-    }
-
-    public void test() {
-        //printTour();
-        System.out.println(checkTree());
-
-        Random rand = new Random(0);
-
-        for (long iter = 0; iter < 1000000 ; ++iter){
-            int a = rand.nextInt(citysElements.length);
-            int b = prev(a);
-            int c = rand.nextInt(citysElements.length);
-            int d = next(c);
-
-            if (between(b, a, c) && between(c, d, b)){
-                if(iter %1000 == 0)System.out.println("\n iter " + iter + " move " + b + "-" + a +" "+ c +"-" + d);
-                flip(a, b, c, d);
-
-                //printTour();
-                if (!checkTree()){
-                    throw new Error(String.valueOf(iter));
-                }
-            }
-
-        }
-
     }
 
     private void printTour() {
@@ -195,6 +80,31 @@ public class TwoLevelTree {
         parent.ID = parentsNum++;
     }
 
+//    public void test() {
+//        //printTour();
+//        System.out.println(checkTree());
+//
+//        Random rand = new Random(0);
+//
+//        for (long iter = 0; iter < 1000000 ; ++iter){
+//            int a = rand.nextInt(citysElements.length);
+//            int b = prev(a);
+//            int c = rand.nextInt(citysElements.length);
+//            int d = next(c);
+//
+//            if (between(b, a, c) && between(c, d, b)){
+//                if(iter %1000 == 0)System.out.println("\n iter " + iter + " move " + b + "-" + a +" "+ c +"-" + d);
+//                flip(a, b, c, d);
+//
+//                //printTour();
+//                if (!checkTree()){
+//                    throw new Error(String.valueOf(iter));
+//                }
+//            }
+//
+//        }
+//
+//    }
 
     private boolean checkParentsConnection() {
         if (headParent == null) return false;
@@ -268,7 +178,6 @@ public class TwoLevelTree {
         return count == citysElements.length;
     }
 
-
     private boolean checkParentElementsRelation() {
         Parent parent;
         for (parent = headParent; parent != headParent.previousParent; parent = parent.nextParent) {
@@ -303,7 +212,7 @@ public class TwoLevelTree {
      * @param a index of a
      * @return index of the successor of a
      */
-    public int next(int a) {
+    int next(int a) {
         return citysElements[a].parent.isReverse ? citysElements[a].previousElement.cityID
                 : citysElements[a].nextElement.cityID;
     }
@@ -314,17 +223,16 @@ public class TwoLevelTree {
      * @param a index of a
      * @return index of the city in front of a
      */
-    public int prev(int a) {
+    int prev(int a) {
         return citysElements[a].parent.isReverse ? citysElements[a].nextElement.cityID
                 : citysElements[a].previousElement.cityID;
     }
 
-    public int getHeadCityID(){
+    int getHeadCityID(){
         return headParent.isReverse ? headParent.endElement.cityID : headParent.beginElement.cityID;
     }
 
-
-    public boolean between(int a, int b, int c) {
+    private boolean between(int a, int b, int c) {
         Element elmA = citysElements[a];
         Element elmB = citysElements[b];
         Element elmC = citysElements[c];
@@ -360,7 +268,7 @@ public class TwoLevelTree {
         }
     }
 
-    public int[] getCurrentTour() {
+    int[] getCurrentTour() {
         int[] tour = new int[citysElements.length];
         int count = 0;
         Element elm = headParent.isReverse ? headParent.endElement : headParent.beginElement;
@@ -382,7 +290,7 @@ public class TwoLevelTree {
      * @param c index
      * @param d index
      */
-    public void flip(int a, int b, int c, int d) {
+    void flip(int a, int b, int c, int d) {
 
         //check if d-b and a-c consist of a sequence of consecutive segments
         if (citysElements[a].parent != citysElements[b].parent
@@ -840,5 +748,93 @@ public class TwoLevelTree {
             nextElem.ID = currParent.isReverse ? currElem.ID - 1 : currElem.ID + 1;
             currElem = nextElem;
         } while (currElem != citysElements[a]);
+    }
+
+    private class Parent {
+        int ID;
+        int size = 0;
+        boolean isReverse = false;
+        Parent previousParent;
+        Parent nextParent;
+        Element beginElement = null;
+        Element endElement = null;
+
+        //boolean isAbandoned = false;
+
+        @Override
+        public String toString() {
+            return isReverse ? endElement.toString() + '-' + beginElement.toString()
+                    : beginElement.toString() + '-' + endElement.toString();
+        }
+
+        private void addElementToLast(Element element) {
+            if (size == 0) {
+                beginElement = element;
+                endElement = element;
+            } else {
+                endElement.nextElement = element;
+                element.previousElement = endElement;
+                endElement = element;
+            }
+            element.ID = size++;
+            element.parent = this;
+        }
+
+        private boolean checkElementRelation() {
+            Element element = isReverse ? endElement : beginElement;
+            int count = 1;
+
+            while(element != (isReverse ? beginElement : endElement)){
+                if (count > size){
+                    System.err.println("tour element number error 1");
+                    return false;
+                }
+                if (element.parent != this){
+                    System.err.println("tour element number error 2");
+                    return false;
+                }
+                Element followElem = isReverse ? element.previousElement : element.nextElement;
+
+                if (isReverse ?
+                        element.ID <= followElem.ID : element.ID >= followElem.ID) {
+                    System.err.println("tour element number error 3");
+                    return false;
+                }
+
+                element = followElem;
+                ++count;
+            }
+
+            return element.parent == this && count == size;
+        }
+
+//        private boolean pathLiesIn(int a, int c) {
+//            if (isReverse) {
+//                return between(endElement.previousElement.cityID, a, c)
+//                        &&
+//                        between(a, c, beginElement.nextElement.cityID);
+//            } else {
+//                return between(beginElement.previousElement.cityID, a, c)
+//                        &&
+//                        between(a, c, endElement.nextElement.cityID);
+//            }
+//        }
+    }
+
+    private class Element {
+        final int cityID;
+        int ID;
+        Parent parent;
+        Element previousElement;
+        Element nextElement;
+
+        private Element(int cityID) {
+            this.cityID = cityID;
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toString(cityID);
+        }
     }
 }
