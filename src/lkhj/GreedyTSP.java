@@ -24,7 +24,7 @@ class GreedyTSP {
             int currN = tour[count-1];
             int nextN = findNearest(currN);
             tour[count] = nextN;
-            isInTour[count] = true;
+            isInTour[nextN] = true;
             ++count;
         }
         return tour;

@@ -1,7 +1,6 @@
 package lkhj;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * solve fractional TSP using two level tree structure
