@@ -47,10 +47,11 @@ public class Main {
 
         Random random = new Random(0);
 
-        int num = 100;
-        double[][] mat = genRandomMatrix(num, 1, 1000, random);
+        int num = 10;
+        double[][] mat = genRandomMatrix(num, 1, 100, random);
         writeInstance(mat);
         LKHJ solver = new LKHJ(mat, random);
+        //solver.twoOptSolve();
         solver.solve();
     }
 }

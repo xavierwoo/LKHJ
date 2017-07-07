@@ -3,7 +3,7 @@ package lkhj;
 import java.util.ArrayList;
 
 /**
- * solve fractional TSP using two level tree structure
+ * Solve fractional TSP using two level tree structure
  * Created by Xavier on 2017/6/6.
  */
 class TwoLevelTree {
@@ -198,7 +198,7 @@ class TwoLevelTree {
         return parent.size >= (int) lower && parent.size <= (int) upper;
     }
 
-    private boolean checkTree() {
+    boolean checkTree() {
         return checkParentsConnection()
                 && checkElementsConnection()
                 && checkParentElementsRelation()
@@ -231,7 +231,7 @@ class TwoLevelTree {
         return headParent.isReverse ? headParent.endElement.cityID : headParent.beginElement.cityID;
     }
 
-    private boolean between(int a, int b, int c) {
+    boolean between(int a, int b, int c) {
         Element elmA = citysElements[a];
         Element elmB = citysElements[b];
         Element elmC = citysElements[c];
