@@ -17,7 +17,7 @@ public class LKHJ {
     private double objective;
 
     private ArrayList<ArrayList<Integer>> candidatesTable;
-    private int MAX_CANDIDATES = 9;
+    private int MAX_CANDIDATES = 5;
     private int MAX_MOVE_LEVEL = 5;
 
     public LKHJ(double[][] costMatrix, Random random){
@@ -65,17 +65,17 @@ public class LKHJ {
     }
 
     private void genInitialTour(){
-//        int[] tour = new GreedyTSP(costMatrix).solve();
-//        tree = new TwoLevelTree(tour);
-//        objective = calculateObj();
-
-        ArrayList<Integer> tour = new ArrayList<>();
-        for (int i=0; i<costMatrix.length; ++i){
-            tour.add(i);
-        }
-        Collections.shuffle(tour, random);
-        tree = new TwoLevelTree(tour.stream().mapToInt(Integer::intValue).toArray());
+        int[] tour = new GreedyTSP(costMatrix).solve();
+        tree = new TwoLevelTree(tour);
         objective = calculateObj();
+
+//        ArrayList<Integer> tour = new ArrayList<>();
+//        for (int i=0; i<costMatrix.length; ++i){
+//            tour.add(i);
+//        }
+//        Collections.shuffle(tour, random);
+//        tree = new TwoLevelTree(tour.stream().mapToInt(Integer::intValue).toArray());
+//        objective = calculateObj();
     }
 
     private double calculateObj(){
@@ -142,7 +142,11 @@ public class LKHJ {
     }
 
     private void makeMove(FlipMove flipMove){
-        tree.flip(flipMove.a, flipMove.b, flipMove.c, flipMove.d);
+        if (flipMove.a == tree.next(flipMove.b)) {
+            tree.flip(flipMove.a, flipMove.b, flipMove.c, flipMove.d);
+        }else{
+            tree.flip(flipMove.b, flipMove.a, flipMove.d, flipMove.c);
+        }
         objective += flipMove.deltaObj;
     }
 
@@ -168,6 +172,7 @@ public class LKHJ {
 
         System.out.println(objective);
         System.out.println(tree.checkTree());
+        System.out.println(calculateObj());
         return objective;
     }
 
@@ -199,38 +204,46 @@ public class LKHJ {
     private boolean findNext2OptMove(int a, int b,
                                      ArrayList<Edge> ys,
                                      double sumDelta, int level){
-        for (int c : candidatesTable.get(b)){
+        ArrayList<FlipMove> searchedMoves = new ArrayList<>();
+        for (int c : candidatesTable.get(b)) {
             int d = tree.next(c);
             if (ys.contains(new Edge(c, d))
                     ||
                     !isFeasibleFlipMove(a, b, c, d)) continue;
 
             FlipMove fmv = evaluateMove(a, b, c, d);
-            if (fmv.deltaObj + sumDelta < 0){
+            if (fmv.deltaObj + sumDelta < 0) {
                 makeMove(fmv);
-                System.out.println(level + "opt move!");
+                System.out.println(level + "opt move! " + tree.checkTree() + " " + objective);
                 return true;
-            }else if(level < MAX_MOVE_LEVEL){
+            } else {
+                searchedMoves.add(fmv);
+            }
+
+        }
+
+        if(level < MAX_MOVE_LEVEL){
+            for (FlipMove fmv : searchedMoves){
                 makeMove(fmv);
-                ys.add(new Edge(b, c));
-                if (a == tree.next(d)){
-                    if (findNext2OptMove(a, d, ys,
+                ys.add(new Edge(fmv.b, fmv.c));
+                if (a == tree.next(fmv.d)){
+                    if (findNext2OptMove(fmv.a, fmv.d, ys,
                             fmv.deltaObj + sumDelta,
                             level+1)){
                         return true;
                     }
                 }else{
-                    if (findNext2OptMove(d, a, ys,
+                    if (findNext2OptMove(fmv.d, fmv.a, ys,
                             fmv.deltaObj + sumDelta,
                             level+ 1)){
                         return true;
                     }
                 }
                 ys.remove(ys.size()-1);
-                if (a == tree.next(d) && b == tree.next(c)){
-                    makeMove(new FlipMove(a, d, c, b, -fmv.deltaObj));
+                if (fmv.a == tree.next(fmv.d) && fmv.b == tree.next(fmv.c)){
+                    makeMove(new FlipMove(fmv.a, fmv.d, fmv.c, fmv.b, -fmv.deltaObj));
                 }else{
-                    makeMove(new FlipMove(d, a, b, c, -fmv.deltaObj));
+                    makeMove(new FlipMove(fmv.d, fmv.a, fmv.b, fmv.c, -fmv.deltaObj));
                 }
             }
         }

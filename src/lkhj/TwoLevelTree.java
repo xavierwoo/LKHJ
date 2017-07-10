@@ -290,6 +290,9 @@ class TwoLevelTree {
      * @param d index
      */
     void flip(int a, int b, int c, int d) {
+        if (a != next(b) && d != next(c)){
+            throw new Error("Infeasible flip!");
+        }
 
         //check if d-b and a-c consist of a sequence of consecutive segments
         if (citysElements[a].parent != citysElements[b].parent
