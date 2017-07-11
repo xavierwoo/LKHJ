@@ -290,7 +290,7 @@ class TwoLevelTree {
      * @param d index
      */
     void flip(int a, int b, int c, int d) {
-        if (a != next(b) && d != next(c)){
+        if (a != next(b) || d != next(c)){
             throw new Error("Infeasible flip!");
         }
 
