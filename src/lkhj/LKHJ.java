@@ -326,13 +326,11 @@ public class LKHJ {
 
         System.out.println(objective);
         System.out.println(tree.checkTree());
-        System.out.println(calculateObj());
+        System.out.println(checkCalcObjective());
         return objective;
     }
 
     private boolean LKMove(){
-//        int startCity = tree.getHeadCityID();
-//        int t1 = startCity;
         int t1 = 0;
         do{
             if (moveFromCity(t1)){
@@ -634,68 +632,114 @@ public class LKHJ {
 
     private boolean moveFromCity(final int t1){
         ArrayList<Edge> ys = new ArrayList<>();
-//        ArrayList<ArrayList<FlipMove>> triMoves = new ArrayList<>();
-//        ArrayList<FlipMove> duelMoves = new ArrayList<>();
-//
-//        if (tryDuelMove(t1, 0, 2)){
-//            return true;
-//        }
-//
-//        if (tryTriMoveType(t1, triMoves)){
-//            return true;
-//        }
-//
-//        return false;
         int t2 = tree.prev(t1);
-        return findNextMove(t1, t2, ys, 0, 2, MAX_MOVE_LEVEL);
+        return findNextMove(t1, t2, ys, 0, 2, MAX_MOVE_LEVEL, "");
     }
 
-    private boolean findNextMove(int a, int b,
-                                 ArrayList<Edge> ys,
-                                 double sumDelta, int level, final int maxLevel){
-        ArrayList<FlipMove> searchedMoves = new ArrayList<>();
-        final double x1 = costMatrix[a][b];
-        for (int c : candidatesTable.get(b)) {
-            final double y1 = costMatrix[b][c];
-            if (y1 > x1)continue;
-            int d = tree.next(c);
-            if (ys.contains(new Edge(c, d))
-                    ||
-                    !isFeasibleFlipMove(a, b, c, d)) continue;
+    private boolean tryT4IsNextT3(int t1, int t2, int t3, ArrayList<Edge> ys, double sumDelta, int level, int maxLevel, String star){
+        final int t4 = tree.next(t3);
+        if (ys.contains(new Edge(t3, t4))
+                ||
+                !isFeasibleFlipMove(t1, t2, t3, t4)) return false;
 
-            FlipMove fmv = evaluateMove(a, b, c, d);
-            if (fmv.deltaObj + sumDelta < 0) {
-                makeMove(fmv);
-                printLog(level + "-opt move! " + tree.checkTree() + " " + objective);
+        FlipMove fmv = evaluateMove(t1, t2, t3, t4);
+        if (fmv.deltaObj + sumDelta < 0) {
+            makeMove(fmv);
+            printLog(level + star+ "-opt move! " + tree.checkTree() + " " + objective);
+            return true;
+        } else if (level < maxLevel){
+            makeMove(fmv);
+            ys.add(new Edge(fmv.b, fmv.c));
+            if (fmv.a == tree.next(fmv.d)){
+                if (findNextMove(fmv.a, fmv.d, ys,
+                        fmv.deltaObj + sumDelta,
+                        level + 1, maxLevel, star)){
+                    return true;
+                }
+            }else{
+                if( findNextMove(fmv.d, fmv.a, ys,
+                        fmv.deltaObj + sumDelta,
+                        level + 1, maxLevel, star)){
+                    return true;
+                }
+            }
+            ys.remove(ys.size() - 1);
+            if (fmv.a == tree.next(fmv.d) && fmv.b == tree.next(fmv.c)){
+                makeMove(new FlipMove(fmv.a, fmv.d, fmv.c, fmv.b, -fmv.deltaObj));
+            }else{
+                makeMove(new FlipMove(fmv.d, fmv.a, fmv.b, fmv.c, -fmv.deltaObj));
+            }
+        }
+        return false;
+    }
+
+    private boolean tryT4IsPrevT3(int t1, int t2, int t3, int maxLevel, String star){
+        final int t4 = t1 == tree.next(t2) ? tree.prev(t3) : tree.next(t3);
+        if (t4==t1 || t4==t2)return false;
+        final double x1 = costMatrix[t1][t2];
+        final double y1 = costMatrix[t2][t3];
+        final double x2 = costMatrix[t3][t4];
+        for (int t5 : candidatesTable.get(t4)){
+            if ((t1 == tree.next(t2) && !tree.between(t3,t5,t2))
+                    ||
+                    (t2 == tree.next(t1) && !tree.between(t2,t5,t3)))continue;
+            final double y2 = costMatrix[t4][t5];
+            if (y2 > x2) continue;
+            int t6 = t1 == tree.next(t2) ? tree.prev(t5) : tree.next(t5);
+            if (t6==t3)continue;
+            double x3 = costMatrix[t5][t6];
+            double y3 = costMatrix[t6][t1];
+            if (y1 +y2 +y3 < x1+ x2+x3){
+                makeMove(evaluateMove(t1,t2,t4,t3));
+                makeMove(evaluateMove(t4,t2,t6,t5));
+                makeMove(evaluateMove(t6,t2,t3,t1));
+                printLog("3*-opt move! " + tree.checkTree() + " " + objective);
                 return true;
-            } else {
-                searchedMoves.add(fmv);
+            }else{
+
+                makeMove(evaluateMove(t1, t2, t4, t3));
+                makeMove(evaluateMove(t4, t2, t6, t5));
+                makeMove(evaluateMove(t6, t2, t3, t1));
+
+                ArrayList<Edge> ys = new ArrayList<>();
+                ys.add(new Edge(t1,t6));
+                ys.add(new Edge(t2,t3));
+                ys.add(new Edge(t4,t5));
+                if (t1 == tree.next(t6)){
+                    if(findNextMove(t1,t6, ys,
+                            y1+y2+y3-x1-x2-x3,
+                            4, maxLevel, "*")){
+                        return true;
+                    }
+                }else{
+                    if(findNextMove(t6,t1, ys,
+                            y1+y2+y3-x1-x2-x3,
+                            4, maxLevel, "*")){
+                        return true;
+                    }
+                }
+                makeMove(new FlipMove(t3,t2,t6,t1, x1+x2+x3-y1-y2-y3));
+                makeMove(new FlipMove(t6,t2,t4,t5,0));
+                makeMove(new FlipMove(t4,t2,t1,t3, 0));
             }
         }
 
-        if(level < maxLevel){
-            for (FlipMove fmv : searchedMoves){
-                makeMove(fmv);
-                ys.add(new Edge(fmv.b, fmv.c));
-                if (fmv.a == tree.next(fmv.d)){
-                    if (findNextMove(fmv.a, fmv.d, ys,
-                            fmv.deltaObj + sumDelta,
-                            level+1, maxLevel)){
-                        return true;
-                    }
-                }else{
-                    if (findNextMove(fmv.d, fmv.a, ys,
-                            fmv.deltaObj + sumDelta,
-                            level+ 1, maxLevel)){
-                        return true;
-                    }
-                }
-                ys.remove(ys.size()-1);
-                if (fmv.a == tree.next(fmv.d) && fmv.b == tree.next(fmv.c)){
-                    makeMove(new FlipMove(fmv.a, fmv.d, fmv.c, fmv.b, -fmv.deltaObj));
-                }else{
-                    makeMove(new FlipMove(fmv.d, fmv.a, fmv.b, fmv.c, -fmv.deltaObj));
-                }
+        return false;
+    }
+
+    private boolean findNextMove(int t1, int t2,
+                                 ArrayList<Edge> ys,
+                                 double sumDelta, int level, final int maxLevel, String star){
+        final double x1 = costMatrix[t1][t2];
+        for (int t3 : candidatesTable.get(t2)) {
+            if (t3 == t1)continue;
+            final double y1 = costMatrix[t2][t3];
+            if (y1 > x1)continue;
+            if (tryT4IsNextT3(t1, t2, t3, ys, sumDelta, level, maxLevel, star)){
+                return true;
+            }
+            if (level == 2 && tryT4IsPrevT3(t1,t2,t3,maxLevel, "*")){
+                return true;
             }
         }
         return false;
