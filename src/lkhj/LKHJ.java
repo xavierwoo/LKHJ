@@ -62,17 +62,17 @@ public class LKHJ {
     }
 
     private void genInitialTour(){
-        int[] tour = new GreedyTSP(costMatrix).solve();
-        tree = new TwoLevelTree(tour);
-        objective = calculateObj();
-
-//        ArrayList<Integer> tour = new ArrayList<>();
-//        for (int i=0; i<costMatrix.length; ++i){
-//            tour.add(i);
-//        }
-//        Collections.shuffle(tour, random);
-//        tree = new TwoLevelTree(tour.stream().mapToInt(Integer::intValue).toArray());
+//        int[] tour = new GreedyTSP(costMatrix).solve();
+//        tree = new TwoLevelTree(tour);
 //        objective = calculateObj();
+
+        ArrayList<Integer> tour = new ArrayList<>();
+        for (int i=0; i<costMatrix.length; ++i){
+            tour.add(i);
+        }
+        Collections.shuffle(tour, random);
+        tree = new TwoLevelTree(tour.stream().mapToInt(Integer::intValue).toArray());
+        objective = calculateObj();
     }
 
     private double calculateObj(){
@@ -147,13 +147,17 @@ public class LKHJ {
 
 
     private boolean moveFromCity(final int t1){
+        ArrayList<Edge> xs = new ArrayList<>();
         ArrayList<Edge> ys = new ArrayList<>();
+
         int t2 = tree.prev(t1);
-        return findNextMove(t1, t2, ys, 0, 2, MAX_MOVE_LEVEL, "");
+        return findNextMove(t1, t2, xs, ys, 0, 2, MAX_MOVE_LEVEL, "");
     }
 
     private boolean tryT4IsNextT3(int t1, int t2, int t3,
-                                  ArrayList<Edge> ys, double sumDelta, int level, int maxLevel, String star){
+                                  ArrayList<Edge> xs,
+                                  ArrayList<Edge> ys,
+                                  double sumDelta, int level, int maxLevel, String star){
         final int t4 = tree.next(t3);
         if (ys.contains(new Edge(t3, t4))
                 ||
@@ -166,20 +170,22 @@ public class LKHJ {
             return true;
         } else if (level < maxLevel){
             makeMove(fmv);
+            xs.add(new Edge(fmv.c, fmv.d));
             ys.add(new Edge(fmv.b, fmv.c));
             if (fmv.a == tree.next(fmv.d)){
-                if (findNextMove(fmv.a, fmv.d, ys,
+                if (findNextMove(fmv.a, fmv.d,xs, ys,
                         fmv.deltaObj + sumDelta,
                         level + 1, maxLevel, star)){
                     return true;
                 }
-            }else{
-                if( findNextMove(fmv.d, fmv.a, ys,
+            }else {
+                if (findNextMove(fmv.d, fmv.a,xs, ys,
                         fmv.deltaObj + sumDelta,
-                        level + 1, maxLevel, star)){
+                        level + 1, maxLevel, star)) {
                     return true;
                 }
             }
+            xs.remove(xs.size()-1);
             ys.remove(ys.size() - 1);
             if (fmv.a == tree.next(fmv.d) && fmv.b == tree.next(fmv.c)){
                 makeMove(new FlipMove(fmv.a, fmv.d, fmv.c, fmv.b, -fmv.deltaObj));
@@ -219,17 +225,21 @@ public class LKHJ {
                 makeMove(evaluateMove(t6, t2, t3, t1));
 
                 ArrayList<Edge> ys = new ArrayList<>();
+                ArrayList<Edge> xs = new ArrayList<>();
+                xs.add(new Edge(t1,t2));
+                xs.add(new Edge(t3,t4));
+                xs.add(new Edge(t5,t6));
                 ys.add(new Edge(t1,t6));
                 ys.add(new Edge(t2,t3));
                 ys.add(new Edge(t4,t5));
                 if (t1 == tree.next(t6)){
-                    if(findNextMove(t1,t6, ys,
+                    if(findNextMove(t1,t6, xs, ys,
                             y1+y2+y3-x1-x2-x3,
                             4, maxLevel, "*")){
                         return true;
                     }
                 }else{
-                    if(findNextMove(t6,t1, ys,
+                    if(findNextMove(t6,t1, xs, ys,
                             y1+y2+y3-x1-x2-x3,
                             4, maxLevel, "*")){
                         return true;
@@ -238,7 +248,8 @@ public class LKHJ {
                 makeMove(new FlipMove(t3,t2,t6,t1, x1+x2+x3-y1-y2-y3));
                 makeMove(new FlipMove(t6,t2,t4,t5,0));
                 makeMove(new FlipMove(t4,t2,t1,t3, 0));
-                ys.subList(ys.size()-3, ys.size());
+                xs.subList(xs.size()-3, ys.size()).clear();
+                ys.subList(ys.size()-3, ys.size()).clear();
             }
         }
 
@@ -246,14 +257,15 @@ public class LKHJ {
     }
 
     private boolean findNextMove(int t1, int t2,
+                                 ArrayList<Edge> xs,
                                  ArrayList<Edge> ys,
                                  double sumDelta, int level, final int maxLevel, String star){
         final double x1 = costMatrix[t1][t2];
         for (int t3 : candidatesTable.get(t2)) {
-            if (t3 == t1)continue;
+            if (t3 == t1 || xs.contains(new Edge(t2,t3)))continue;
             final double y1 = costMatrix[t2][t3];
             if (y1 > x1)continue;
-            if (tryT4IsNextT3(t1, t2, t3, ys, sumDelta, level, maxLevel, star)){
+            if (tryT4IsNextT3(t1, t2, t3,xs, ys, sumDelta, level, maxLevel, star)){
                 return true;
             }
             if (level == 2 && tryT4IsPrevT3(t1,t2,t3,maxLevel)){
