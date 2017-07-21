@@ -8,27 +8,22 @@ import java.util.*;
  */
 public class LKHJ {
 
+    final private int MAX_CANDIDATES = 5;
+    final private int MAX_MOVE_LEVEL = 5;
     private Random random;
     private double[][] costMatrix;
     private TwoLevelTree tree;
     private double objective;
-
+    private double LB;
+    //private double twoSumPi;
     private ArrayList<ArrayList<Integer>> candidatesTable;
-    private int MAX_CANDIDATES = 5;
-    private int MAX_MOVE_LEVEL = 5;
+    private double[] pi;
+
 
     public LKHJ(double[][] costMatrix, Random random){
         this.costMatrix = costMatrix;
         this.random = random;
-        genNearestTable(MAX_CANDIDATES);
-    }
 
-    public void setMAX_MOVE_LEVEL(int level){
-        MAX_MOVE_LEVEL = level;
-    }
-
-    public void setMAX_CANDIDATES(int num){
-        MAX_CANDIDATES = num;
     }
 
     private void genNearestTable(int nearestCount){
@@ -50,7 +45,7 @@ public class LKHJ {
             line.sort(new Comparator<Integer>() {
                 @Override
                 public int compare(Integer integer, Integer t1) {
-                    return Double.compare(costMatrix[index][integer], costMatrix[index][t1]);
+                    return Double.compare(costMatrix[index][integer] + pi[integer], costMatrix[index][t1] + pi[t1]);
                 }
             });
         }
@@ -86,9 +81,9 @@ public class LKHJ {
             currCityID = nextCityID;
         }while(currCityID != headCityID);
 
+
         return tourCost;
     }
-
 
     private void makeMove(FlipMove flipMove){
         if (flipMove.a == tree.next(flipMove.b)) {
@@ -111,14 +106,20 @@ public class LKHJ {
             obj += costMatrix[tour[i]][tour[i+1]];
         }
         obj += costMatrix[tour[tour.length-1]][tour[0]];
+
         return obj;
     }
 
     public double solve(){
+        initialize();
+        genNearestTable(MAX_CANDIDATES);
         genInitialTour();
 
-        while(LKMove());
+        while(LKMove()){
+            printObjAndGap();
+        }
 
+        System.out.println("LB: " + LB);
         System.out.println(objective);
         System.out.println(tree.checkTree());
         System.out.println(checkCalcObjective());
@@ -145,6 +146,9 @@ public class LKHJ {
         System.out.println(string);
     }
 
+    private void printObjAndGap(){
+        printLog("obj : " + (objective) + "  Gap : " + ((objective - LB)/LB * 10) + "%");
+    }
 
     private boolean moveFromCity(final int t1){
         ArrayList<Edge> xs = new ArrayList<>();
@@ -166,7 +170,7 @@ public class LKHJ {
         FlipMove fmv = evaluateMove(t1, t2, t3, t4);
         if (fmv.deltaObj + sumDelta < 0) {
             makeMove(fmv);
-            printLog(level + star+ "-opt move! " + tree.checkTree() + " " + objective);
+            printLog(level + star+ "-opt move! " + tree.checkTree());
             return true;
         } else if (level < maxLevel){
             makeMove(fmv);
@@ -207,16 +211,16 @@ public class LKHJ {
                     ||
                     (t2 == tree.next(t1) && !tree.between(t2,t5,t3)))continue;
             final double y2 = costMatrix[t4][t5];
-            if (y2 > x2) continue;
+            if (Double.compare(y2,x2) > 0) continue;
             int t6 = t1 == tree.next(t2) ? tree.prev(t5) : tree.next(t5);
             if (t6==t3)continue;
             double x3 = costMatrix[t5][t6];
             double y3 = costMatrix[t6][t1];
-            if (y1 +y2 +y3 < x1+ x2+x3){
+            if (Double.compare(y1+y2+y3, x1+x2+x3) < 0){
                 makeMove(evaluateMove(t1,t2,t4,t3));
                 makeMove(evaluateMove(t4,t2,t6,t5));
                 makeMove(evaluateMove(t6,t2,t3,t1));
-                printLog("3*-opt move! " + tree.checkTree() + " " + objective);
+                printLog("3*-opt move! " + tree.checkTree());
                 return true;
             }else{
 
@@ -264,7 +268,7 @@ public class LKHJ {
         for (int t3 : candidatesTable.get(t2)) {
             if (t3 == t1 || xs.contains(new Edge(t2,t3)))continue;
             final double y1 = costMatrix[t2][t3];
-            if (y1 > x1)continue;
+            if (Double.compare(y1,x1) > 0)continue;
             if (tryT4IsNextT3(t1, t2, t3,xs, ys, sumDelta, level, maxLevel, star)){
                 return true;
             }
@@ -273,6 +277,75 @@ public class LKHJ {
             }
         }
         return false;
+    }
+
+    private void initialize(){
+        pi = new double[costMatrix.length];
+        double v[] = new double[costMatrix.length];
+        LB = -Double.MIN_VALUE;
+        double tk = 1;
+        int period = costMatrix.length / 2;
+
+        int iter = 0;
+        boolean firstPeriod = true;
+        for (;;) {
+            OneTree tree = new OneTree(costMatrix, pi);
+            double w = tree.treeLength;
+            System.out.println(w + " " + tk + " " + iter);
+            if (Double.compare(LB,w) < 0){
+                LB = w;
+                if (iter == period) period*= 2;
+            }else if (firstPeriod){
+                tk *= 2;
+                firstPeriod = false;
+            }
+            calcV(tree, v);
+            if (subgradientIsOpt(v)){
+                System.out.println();
+                break;
+            }
+
+            updatePi(pi, tk, v);
+            ++iter;
+            if (iter == period){
+                iter = 0;
+                period /= 2;
+                tk /= 2;
+                //firstPeriod = true;
+                if (period == 0 || tk < 0.000001){
+                    System.out.println();
+                    break;
+                }
+            }
+        }
+    }
+
+    private void updatePi(double[] pi, double tk, double[] v){
+        for (int i=0; i<pi.length; ++i){
+            pi[i] += tk * v[i];
+        }
+    }
+
+    private boolean subgradientIsOpt(double[] v){
+        for (double vi : v){
+            if (Double.compare(vi, 0) != 0) return false;
+        }
+        return true;
+    }
+
+//    private double computeW(double treeLength, double[] pi){
+//        double w = treeLength;
+//        twoSumPi = 0;
+//        for (double pii : pi){
+//            twoSumPi += 2*pii;
+//        }
+//        return w - twoSumPi;
+//    }
+
+    private void calcV(OneTree tree, double[] v){
+        for (int i=0; i<v.length; ++i){
+            v[i] = tree.getDegree(i) - 2;
+        }
     }
 
     public int[] getCurrentTour(){

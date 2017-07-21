@@ -1,4 +1,5 @@
 import lkhj.LKHJ;
+import lkhj.OneTree;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -44,7 +45,6 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 	// write your code here
-
         Random random = new Random(0);
 
         int num = 500;
