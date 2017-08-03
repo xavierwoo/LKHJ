@@ -47,7 +47,7 @@ public class Main {
 	// write your code here
         Random random = new Random(0);
 
-        int num = 500;
+        int num = 1000;
         double[][] mat = genRandomMatrix(num, 1, 100, random);
         writeInstance(mat);
         LKHJ solver = new LKHJ(mat, new Random());

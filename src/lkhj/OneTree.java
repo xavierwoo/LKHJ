@@ -117,7 +117,7 @@ public class OneTree {
         }
     }
 
-    double calcTreeLength(TreeNode root){
+    private double calcTreeLength(TreeNode root){
         if (root.children.isEmpty()){
             return 0;
         }else{
@@ -126,6 +126,16 @@ public class OneTree {
                 cost += costMatrix[root.data][child.data] + calcTreeLength(treeNodes[child.data]);
             }
             return cost;
+        }
+    }
+
+    boolean hasEdge(int a, int b){
+        if (a == 0){
+            return specialConnections[0] == b || specialConnections[1] == b;
+        }else if (b==0){
+            return specialConnections[0] == a || specialConnections[1] == a;
+        }else {
+            return treeNodes[a].father == treeNodes[b] || treeNodes[b].father == treeNodes[a];
         }
     }
 

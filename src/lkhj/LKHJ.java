@@ -1,5 +1,7 @@
 package lkhj;
 
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
 import java.util.*;
 
 /**
@@ -15,9 +17,9 @@ public class LKHJ {
     private TwoLevelTree tree;
     private double objective;
     private double LB;
-    //private double twoSumPi;
     private ArrayList<ArrayList<Integer>> candidatesTable;
     private double[] pi;
+    int[] bestTour = null;
 
 
     public LKHJ(double[][] costMatrix, Random random){
@@ -56,18 +58,50 @@ public class LKHJ {
         }
     }
 
-    private void genInitialTour(){
+    private void genInitialTour(OneTree oneTree){
 //        int[] tour = new GreedyTSP(costMatrix).solve();
 //        tree = new TwoLevelTree(tour);
 //        objective = calculateObj();
 
-        ArrayList<Integer> tour = new ArrayList<>();
+        int[] tour = new int[costMatrix.length];
+        int count = 1;
+
+        HashSet<Integer> reMainingNodes = new HashSet<>();
         for (int i=0; i<costMatrix.length; ++i){
-            tour.add(i);
+            reMainingNodes.add(i);
         }
-        Collections.shuffle(tour, random);
-        tree = new TwoLevelTree(tour.stream().mapToInt(Integer::intValue).toArray());
+        tour[0] = random.nextInt(costMatrix.length);
+        reMainingNodes.remove(tour[0]);
+
+        while(count < costMatrix.length){
+            int currNode = tour[count-1];
+            int nextNode = chooseNextNodeForInit(currNode, reMainingNodes, oneTree);
+            tour[count] = nextNode;
+            reMainingNodes.remove(nextNode);
+            ++count;
+        }
+
+        tree = new TwoLevelTree(tour);
         objective = calculateObj();
+    }
+
+    private int chooseNextNodeForInit(int currNode, HashSet<Integer> remainings, OneTree oneTree){
+        for (int n : candidatesTable.get(currNode)){
+            if (remainings.contains(n) && oneTree.hasEdge(currNode, n)){
+                return n;
+            }
+        }
+        for (int n : candidatesTable.get(currNode)){
+            if (remainings.contains(n)){
+                return n;
+            }
+        }
+
+        int randomPick = random.nextInt(remainings.size());
+        for (int n : remainings){
+            if (--randomPick < 0)return n;
+        }
+        throw new Error("chooseNextNodeForInit");
     }
 
     private double calculateObj(){
@@ -100,7 +134,7 @@ public class LKHJ {
     }
 
     private double checkCalcObjective(){
-        int[] tour = getCurrentTour();
+        int[] tour = tree.getCurrentTour();
         double obj = 0;
         for (int i=0; i< tour.length - 1; ++i){
             obj += costMatrix[tour[i]][tour[i+1]];
@@ -111,19 +145,39 @@ public class LKHJ {
     }
 
     public double solve(){
-        initialize();
-        genNearestTable(MAX_CANDIDATES);
-        genInitialTour();
 
-        while(LKMove()){
+
+        double bestLength = Double.MAX_VALUE;
+
+        OneTree oneTree = initialize();
+        System.out.println("LB: " + LB);
+        genNearestTable(MAX_CANDIDATES);
+
+
+        for (int run = 0; run < 10; ++run) {
+            System.out.println("Run #" + run);
+            genInitialTour(oneTree);
+            int iter = 0;
+            while (LKMove()) {
+//                if (iter % 100 == 0) {
+//                    printObjAndGap();
+//                }
+                ++iter;
+            }
+
             printObjAndGap();
+            System.out.println(tree.checkTree());
+            System.out.println(checkCalcObjective());
+
+            if (Double.compare(bestLength, objective) > 0){
+                bestLength = objective;
+                bestTour = tree.getCurrentTour();
+            }
         }
 
-        System.out.println("LB: " + LB);
-        System.out.println(objective);
-        System.out.println(tree.checkTree());
-        System.out.println(checkCalcObjective());
-        return objective;
+        System.out.println("Best Tour Found: " + bestLength + ". Gap = " + (bestLength - LB)/LB*100 + "%");
+
+        return bestLength;
     }
 
     private boolean LKMove(){
@@ -147,7 +201,7 @@ public class LKHJ {
     }
 
     private void printObjAndGap(){
-        printLog("obj : " + (objective) + "  Gap : " + ((objective - LB)/LB * 10) + "%");
+        printLog("obj : " + (objective) + "  Gap : " + ((objective - LB)/LB * 100) + "%");
     }
 
     private boolean moveFromCity(final int t1){
@@ -170,7 +224,7 @@ public class LKHJ {
         FlipMove fmv = evaluateMove(t1, t2, t3, t4);
         if (fmv.deltaObj + sumDelta < 0) {
             makeMove(fmv);
-            printLog(level + star+ "-opt move! " + tree.checkTree());
+            //printLog(level + star+ "-opt move! " + tree.checkTree());
             return true;
         } else if (level < maxLevel){
             makeMove(fmv);
@@ -220,7 +274,7 @@ public class LKHJ {
                 makeMove(evaluateMove(t1,t2,t4,t3));
                 makeMove(evaluateMove(t4,t2,t6,t5));
                 makeMove(evaluateMove(t6,t2,t3,t1));
-                printLog("3*-opt move! " + tree.checkTree());
+                //printLog("3*-opt move! " + tree.checkTree());
                 return true;
             }else{
 
@@ -279,29 +333,60 @@ public class LKHJ {
         return false;
     }
 
-    private void initialize(){
+    private void init(){
+        pi = new double[costMatrix.length];
+        double[] piCopy = new double[costMatrix.length];
+        double v[] = new double[costMatrix.length];
+        LB = - Double.MAX_VALUE;
+        double tk = 0.01;
+
+        for (;;){
+            OneTree tree = new OneTree(costMatrix, pi);
+            if (Double.compare(LB, tree.treeLength) < 0){
+                LB = tree.treeLength;
+                printLog(LB + " " + tk);
+                calcV(tree, v);
+                if (subgradientIsOpt(v)){
+                    printLog("Optimal got in initialization");
+                }
+                System.arraycopy(pi, 0, piCopy, 0, pi.length);
+                updatePi(pi, tk, v);
+            }else{
+                System.arraycopy(piCopy, 0, pi, 0, pi.length);
+                tk /= 2;
+                calcV(tree, v);
+                updatePi(pi, tk, v);
+            }
+            if (tk < 0.00000001)break;
+        }
+    }
+
+    private OneTree initialize(){
         pi = new double[costMatrix.length];
         double v[] = new double[costMatrix.length];
         LB = -Double.MIN_VALUE;
-        double tk = 1;
-        int period = costMatrix.length / 2;
+        double tk = 0.02;
+        int period = costMatrix.length / 8;
 
         int iter = 0;
         boolean firstPeriod = true;
+        OneTree bestTree = null;
+        System.out.println("Initializing...");
         for (;;) {
             OneTree tree = new OneTree(costMatrix, pi);
             double w = tree.treeLength;
-            System.out.println(w + " " + tk + " " + iter);
+            //System.out.println(w + " " + tk + " " + iter);
             if (Double.compare(LB,w) < 0){
                 LB = w;
+                bestTree = tree;
                 if (iter == period) period*= 2;
             }else if (firstPeriod){
-                tk *= 2;
+                tk /=2;
                 firstPeriod = false;
             }
             calcV(tree, v);
             if (subgradientIsOpt(v)){
-                System.out.println();
+                System.out.println("Optima in Initialization");
                 break;
             }
 
@@ -313,11 +398,11 @@ public class LKHJ {
                 tk /= 2;
                 //firstPeriod = true;
                 if (period == 0 || tk < 0.000001){
-                    System.out.println();
                     break;
                 }
             }
         }
+        return bestTree;
     }
 
     private void updatePi(double[] pi, double tk, double[] v){
@@ -349,7 +434,7 @@ public class LKHJ {
     }
 
     public int[] getCurrentTour(){
-        return tree.getCurrentTour();
+        return bestTour;
     }
 
     private class Edge{
