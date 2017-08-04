@@ -1,20 +1,25 @@
 package lkhj;
 
 
+import org.jgrapht.util.FibonacciHeap;
+import org.jgrapht.util.FibonacciHeapNode;
+
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 
 /**
  * Created by xinyun on 19/07/17.
  */
 public class OneTree {
 
-    double[][] costMatrix;
-    double[] pi;
-    TreeNode[] treeNodes; //index 1 is the root
-    int[] specialConnections = new int[2];
+    private double[][] costMatrix;
+    private double[] pi;
+    private TreeNode[] treeNodes;
+    private int[] specialConnections = new int[2];
     double treeLength;
-    public OneTree(double[][] costMatrix, double[] pi){
+    private int root = -1; //index of root
+
+    OneTree(double[][] costMatrix, double[] pi){
         this.costMatrix = costMatrix;
         treeNodes = new TreeNode[costMatrix.length];
         this.pi = pi;
@@ -40,7 +45,7 @@ public class OneTree {
     }
 
     private double getTreeLength(){
-        double spinningTreeLength = findSpinningTree();
+        findSpinningTree();
         double min[] = new double[2];
         min[0] = min[1] = Double.MAX_VALUE;
         for (int i=1; i<costMatrix.length; ++i){
@@ -65,42 +70,51 @@ public class OneTree {
             }
 
         }
-        treeLength = spinningTreeLength + min[0] + min[1];
-        for (double pii : pi){
-            treeLength -= 2* pii;
-        }
+//        treeLength = spinningTreeLength + min[0] + min[1];
+//        for (double pii : pi){
+//            treeLength -= 2* pii;
+//        }
+        treeLength = calcTreeLength();
         return treeLength;
     }
 
-
-    private double findSpinningTree(){
-        HashSet<Integer> unReachedNodes = new HashSet<>();
-        for (int node = 2; node < costMatrix.length; ++node){
-            unReachedNodes.add(node);
+    private void findSpinningTree(){
+        double[] C = new double[costMatrix.length];
+        Arrays.fill(C, Double.MAX_VALUE);
+        int[] E = new int[costMatrix.length];
+        Arrays.fill(E, -1);
+        FibonacciHeap<Integer> Q = new FibonacciHeap<>();
+        ArrayList<FibonacciHeapNode<Integer>> fbNodes = new ArrayList<>();
+        for (int i=1; i< costMatrix.length; ++i){
+            FibonacciHeapNode<Integer> node = new FibonacciHeapNode<>(i);
+            Q.insert(node, C[i]);
+            fbNodes.add(node);
         }
-        HashSet<Integer> reachedNodes = new HashSet<>();
-        reachedNodes.add(1);
-        treeNodes[1] = new TreeNode(1, null);
-        double spinningTreeLength = 0;
-        while(!unReachedNodes.isEmpty()){
-            double minCost = Double.MAX_VALUE;
-            int[] minEdge = new int[2];
-            for (Integer uNode : unReachedNodes){
-                for (Integer rNode : reachedNodes){
-                    double edgeCost = costMatrix[uNode][rNode] + pi[uNode] + pi[rNode];
-                    if (Double.compare(edgeCost, minCost) < 0){
-                        minCost = edgeCost;
-                        minEdge[0] = uNode;
-                        minEdge[1] = rNode;
-                    }
+        boolean[] isInQ = new boolean[costMatrix.length];
+        Arrays.fill(isInQ, true);
+        isInQ[0] = false;
+
+        //double treeLength = 0;
+
+        while(!Q.isEmpty()){
+            int v = Q.removeMin().getData();
+            isInQ[v] = false;
+            TreeNode vFather = E[v] > -1 ? treeNodes[E[v]] : null;
+            if (vFather == null){
+                root = v;
+            }
+
+            treeNodes[v] = new TreeNode(v, vFather);
+            for (int w=1; w<costMatrix.length; ++w){
+                if (w == v || !isInQ[w])continue;
+                double edgeLength = costMatrix[v][w] + pi[v] + pi[w];
+                if (edgeLength < C[w]){
+                    C[w] = edgeLength;
+                    Q.decreaseKey(fbNodes.get(w-1), C[w]);
+                    E[w] = v;
                 }
             }
-            unReachedNodes.remove(minEdge[0]);
-            reachedNodes.add(minEdge[0]);
-            spinningTreeLength += minCost;
-            treeNodes[minEdge[0]] = treeNodes[minEdge[1]].addChild(minEdge[0]);
         }
-        return spinningTreeLength;
     }
 
     int getDegree(int i){
@@ -139,7 +153,7 @@ public class OneTree {
         }
     }
 
-    double checkTreeLength(){
-        return calcTreeLength(treeNodes[1]) + costMatrix[0][specialConnections[0]] + costMatrix[0][specialConnections[1]];
+    private double calcTreeLength(){
+        return calcTreeLength(treeNodes[root]) + costMatrix[0][specialConnections[0]] + costMatrix[0][specialConnections[1]];
     }
 }

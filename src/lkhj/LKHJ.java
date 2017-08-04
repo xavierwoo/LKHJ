@@ -366,7 +366,7 @@ public class LKHJ {
         double v[] = new double[costMatrix.length];
         LB = -Double.MIN_VALUE;
         double tk = 0.02;
-        int period = costMatrix.length / 8;
+        int period = costMatrix.length / 2;
 
         int iter = 0;
         boolean firstPeriod = true;
@@ -375,7 +375,7 @@ public class LKHJ {
         for (;;) {
             OneTree tree = new OneTree(costMatrix, pi);
             double w = tree.treeLength;
-            //System.out.println(w + " " + tk + " " + iter);
+            System.out.println(w + " " + tk + " " + iter);
             if (Double.compare(LB,w) < 0){
                 LB = w;
                 bestTree = tree;
