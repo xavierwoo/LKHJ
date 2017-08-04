@@ -59,9 +59,6 @@ public class LKHJ {
     }
 
     private void genInitialTour(OneTree oneTree){
-//        int[] tour = new GreedyTSP(costMatrix).solve();
-//        tree = new TwoLevelTree(tour);
-//        objective = calculateObj();
 
         int[] tour = new int[costMatrix.length];
         int count = 1;
@@ -375,7 +372,7 @@ public class LKHJ {
         for (;;) {
             OneTree tree = new OneTree(costMatrix, pi);
             double w = tree.treeLength;
-            System.out.println(w + " " + tk + " " + iter);
+            //System.out.println(w + " " + tk + " " + iter);
             if (Double.compare(LB,w) < 0){
                 LB = w;
                 bestTree = tree;
