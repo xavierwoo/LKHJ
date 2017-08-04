@@ -19,7 +19,7 @@ public class LKHJ {
     private double LB;
     private ArrayList<ArrayList<Integer>> candidatesTable;
     private double[] pi;
-    int[] bestTour = null;
+    private int[] bestTour = null;
 
 
     public LKHJ(double[][] costMatrix, Random random){
@@ -44,12 +44,8 @@ public class LKHJ {
         for (int i = 0; i< candidatesTable.size(); ++i){
             final int index = i;
             ArrayList<Integer> line = candidatesTable.get(index);
-            line.sort(new Comparator<Integer>() {
-                @Override
-                public int compare(Integer integer, Integer t1) {
-                    return Double.compare(costMatrix[index][integer] + pi[integer], costMatrix[index][t1] + pi[t1]);
-                }
-            });
+            line.sort((Integer integer, Integer t1)
+                    ->Double.compare(costMatrix[index][integer] + pi[integer], costMatrix[index][t1] + pi[t1]));
         }
 
         for (ArrayList<Integer> line : candidatesTable){
@@ -330,33 +326,6 @@ public class LKHJ {
         return false;
     }
 
-    private void init(){
-        pi = new double[costMatrix.length];
-        double[] piCopy = new double[costMatrix.length];
-        double v[] = new double[costMatrix.length];
-        LB = - Double.MAX_VALUE;
-        double tk = 0.01;
-
-        for (;;){
-            OneTree tree = new OneTree(costMatrix, pi);
-            if (Double.compare(LB, tree.treeLength) < 0){
-                LB = tree.treeLength;
-                printLog(LB + " " + tk);
-                calcV(tree, v);
-                if (subgradientIsOpt(v)){
-                    printLog("Optimal got in initialization");
-                }
-                System.arraycopy(pi, 0, piCopy, 0, pi.length);
-                updatePi(pi, tk, v);
-            }else{
-                System.arraycopy(piCopy, 0, pi, 0, pi.length);
-                tk /= 2;
-                calcV(tree, v);
-                updatePi(pi, tk, v);
-            }
-            if (tk < 0.00000001)break;
-        }
-    }
 
     private OneTree initialize(){
         pi = new double[costMatrix.length];
@@ -414,15 +383,6 @@ public class LKHJ {
         }
         return true;
     }
-
-//    private double computeW(double treeLength, double[] pi){
-//        double w = treeLength;
-//        twoSumPi = 0;
-//        for (double pii : pi){
-//            twoSumPi += 2*pii;
-//        }
-//        return w - twoSumPi;
-//    }
 
     private void calcV(OneTree tree, double[] v){
         for (int i=0; i<v.length; ++i){

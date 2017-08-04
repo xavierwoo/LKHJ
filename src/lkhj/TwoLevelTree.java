@@ -47,13 +47,13 @@ class TwoLevelTree {
         }
     }
 
-    private void printTour() {
-        int[] tour = getCurrentTour();
-        for (int city : tour) {
-            System.out.print(city + " ");
-        }
-        System.out.println();
-    }
+//    private void printTour() {
+//        int[] tour = getCurrentTour();
+//        for (int city : tour) {
+//            System.out.print(city + " ");
+//        }
+//        System.out.println();
+//    }
 
     private void addParent(Parent parent) {
         if (headParent != null) {
