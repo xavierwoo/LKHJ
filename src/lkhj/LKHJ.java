@@ -152,15 +152,15 @@ public class LKHJ {
             genInitialTour(oneTree);
             int iter = 0;
             while (LKMove()) {
-//                if (iter % 100 == 0) {
-//                    printObjAndGap();
-//                }
                 ++iter;
             }
 
+            //recalculate the objective
+            objective = calculateObj();
+
             printObjAndGap();
-            System.out.println(tree.checkTree());
-            System.out.println(checkCalcObjective());
+//            System.out.println(tree.checkTree());
+//            System.out.println(checkCalcObjective());
 
             if (Double.compare(bestLength, objective) > 0){
                 bestLength = objective;
@@ -299,8 +299,8 @@ public class LKHJ {
                 makeMove(new FlipMove(t3,t2,t6,t1, x1+x2+x3-y1-y2-y3));
                 makeMove(new FlipMove(t6,t2,t4,t5,0));
                 makeMove(new FlipMove(t4,t2,t1,t3, 0));
-                xs.subList(xs.size()-3, ys.size()).clear();
-                ys.subList(ys.size()-3, ys.size()).clear();
+//                xs.subList(xs.size()-3, xs.size()).clear();
+//                ys.subList(ys.size()-3, ys.size()).clear();
             }
         }
 
@@ -330,7 +330,7 @@ public class LKHJ {
     private OneTree initialize(){
         pi = new double[costMatrix.length];
         double v[] = new double[costMatrix.length];
-        LB = -Double.MIN_VALUE;
+        LB = -Double.MAX_VALUE;
         double tk = 0.02;
         int period = costMatrix.length / 2;
 
