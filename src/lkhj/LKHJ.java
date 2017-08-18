@@ -1,6 +1,5 @@
 package lkhj;
 
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.util.*;
 
@@ -10,8 +9,8 @@ import java.util.*;
  */
 public class LKHJ {
 
-    final private int MAX_CANDIDATES = 5;
-    final private int MAX_MOVE_LEVEL = 5;
+    private int MAX_CANDIDATES = 5;
+    private int MAX_MOVE_LEVEL = 5;
     private Random random;
     private double[][] costMatrix;
     private TwoLevelTree tree;
@@ -19,13 +18,20 @@ public class LKHJ {
     private double LB;
     private ArrayList<ArrayList<Integer>> candidatesTable;
     private double[] pi;
-    //private int[] bestTour = null;
     private TwoLevelTree bestTree;
 
     public LKHJ(double[][] costMatrix, Random random){
         this.costMatrix = costMatrix;
         this.random = random;
 
+    }
+
+    public void setMAX_CANDIDATES(int max){
+        MAX_CANDIDATES = max;
+    }
+
+    public void setMAX_MOVE_LEVEL(int max){
+        MAX_MOVE_LEVEL = max;
     }
 
     private void genNearestTable(int nearestCount){
@@ -153,6 +159,9 @@ public class LKHJ {
             int iter = 0;
             while (LKMove()) {
                 ++iter;
+                if (iter %1000 == 0){
+                    printObjAndGap();
+                }
             }
 
             //recalculate the objective
