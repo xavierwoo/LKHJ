@@ -19,8 +19,8 @@ public class LKHJ {
     private double LB;
     private ArrayList<ArrayList<Integer>> candidatesTable;
     private double[] pi;
-    private int[] bestTour = null;
-
+    //private int[] bestTour = null;
+    private TwoLevelTree bestTree;
 
     public LKHJ(double[][] costMatrix, Random random){
         this.costMatrix = costMatrix;
@@ -80,7 +80,7 @@ public class LKHJ {
 
     private int chooseNextNodeForInit(int currNode, HashSet<Integer> remainings, OneTree oneTree){
         for (int n : candidatesTable.get(currNode)){
-            if (remainings.contains(n) && oneTree.hasEdge(currNode, n)){
+            if (remainings.contains(n) && oneTree.hasEdge(currNode, n) && bestTree != null && bestTree.hasEdge(n, currNode)){
                 return n;
             }
         }
@@ -126,7 +126,7 @@ public class LKHJ {
                 0 - costMatrix[a][b] - costMatrix[c][d] + costMatrix[a][d] + costMatrix[b][c]);
     }
 
-    private double checkCalcObjective(){
+    private double checkCalcObjective(TwoLevelTree tree){
         int[] tour = tree.getCurrentTour();
         double obj = 0;
         for (int i=0; i< tour.length - 1; ++i){
@@ -159,17 +159,15 @@ public class LKHJ {
             objective = calculateObj();
 
             printObjAndGap();
-//            System.out.println(tree.checkTree());
-//            System.out.println(checkCalcObjective());
 
             if (Double.compare(bestLength, objective) > 0){
                 bestLength = objective;
-                bestTour = tree.getCurrentTour();
+                bestTree = tree;
             }
         }
 
         System.out.println("Best Tour Found: " + bestLength + ". Gap = " + (bestLength - LB)/LB*100 + "%");
-
+        //System.out.println(checkCalcObjective(bestTree));
         return bestLength;
     }
 
@@ -391,7 +389,7 @@ public class LKHJ {
     }
 
     public int[] getCurrentTour(){
-        return bestTour;
+        return bestTree.getCurrentTour();
     }
 
     private class Edge{

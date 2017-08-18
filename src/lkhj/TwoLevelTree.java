@@ -331,6 +331,10 @@ class TwoLevelTree {
         return true;
     }
 
+    boolean hasEdge(int a, int b){
+        return next(a) == b || next(b) == a;
+    }
+
     private void mergeParents(ArrayList<Parent> parents){
         while(!parents.isEmpty()){
             Parent parent = parents.get(parents.size()-1);
