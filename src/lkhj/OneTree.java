@@ -28,11 +28,6 @@ class OneTree {
 
     private double getTreeLength(){
         double spinningTreeLength = findSpinningTree();
-       // treeNodes = new TreeNode[costMatrix.length];
-//        double spinningTreeLength = findSpinningTreeOld();
-//        if (Double.compare(spinningTreeLength, spinningTreeLength2) != 0){
-//            throw new Error("spinningTree");
-//        }
         double min[] = new double[2];
         min[0] = min[1] = Double.MAX_VALUE;
         for (int i=1; i<costMatrix.length; ++i){
@@ -58,8 +53,6 @@ class OneTree {
         for (double pii : pi){
             treeLength -= 2 * pii;
         }
-        //treeLength -= 1;
-        //treeLength = calcTreeLength();
         return treeLength;
     }
 
