@@ -1,9 +1,11 @@
+import lkhj.InstanceReader;
 import lkhj.LKHJ;
-import lkhj.OneTree;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class Main {
@@ -43,15 +45,50 @@ public class Main {
         return matrix;
     }
 
-    public static void main(String[] args) throws IOException {
-	// write your code here
+    static void testRandom() throws IOException {
         Random random = new Random(0);
 
         int num = 1000;
-        double[][] mat = genRandomMatrix(num, 1, 100, random);
+        double[][] mat = genOptTandomMatrix(num, 2, 100, random);
         writeInstance(mat);
         LKHJ solver = new LKHJ(mat, new Random());
         //solver.twoOptSolve();
         solver.solve();
+    }
+
+    static void testFileInstance() throws IOException {
+        LKHJ solver = new LKHJ(InstanceReader.ReadTSPInstance(
+                "instances/xqg237.tsp"), new Random());
+        solver.solve();
+    }
+
+    static double[][] genOptTandomMatrix(int dimension,double min, double max, Random random){
+        double[][] matrix = genRandomMatrix(dimension, min + 1, max, random);
+
+        ArrayList<Integer> optTour = new ArrayList<>(dimension);
+        for (int i=0; i<dimension; ++i){
+            optTour.add(i);
+        }
+        Collections.shuffle(optTour, random);
+        for (int i=0; i<optTour.size() - 1; ++i){
+            int a = optTour.get(i);
+            int b = optTour.get(i+1);
+            matrix[a][b] = matrix[b][a] = 1;
+            if (random.nextInt(2) == 0){
+                int c = random.nextInt(dimension);
+                if (c != a && c != b){
+                    matrix[a][c] = matrix[c][a] = 1;
+                }
+            }
+        }
+
+        matrix[optTour.get(optTour.size() - 1)][optTour.get(0)]
+                = matrix[optTour.get(0)][optTour.get(optTour.size() - 1)] = 1;
+        return matrix;
+    }
+
+    public static void main(String[] args) throws IOException {
+        testRandom();
+        //testFileInstance();
     }
 }

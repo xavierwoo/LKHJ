@@ -10,7 +10,7 @@ import java.util.Arrays;
 /**
  * Created by xinyun on 19/07/17.
  */
-public class OneTree {
+class OneTree {
 
     double treeLength;
     private double[][] costMatrix;
@@ -45,10 +45,10 @@ public class OneTree {
                     min[0] = edgeCost;
                     specialConnections[0] = i;
                 }
-            }else if (edgeCost < min[0] && edgeCost > min[1]){
+            }else if (edgeCost < min[0] && Double.compare(edgeCost, min[1]) >= 0){
                 min[0] = edgeCost;
                 specialConnections[0] = i;
-            }else if (edgeCost > min[0] && edgeCost < min[1]){
+            }else if (Double.compare(edgeCost, min[0]) >= 0 && edgeCost < min[1]){
                 min[1] = edgeCost;
                 specialConnections[1] = i;
             }
@@ -58,7 +58,7 @@ public class OneTree {
         for (double pii : pi){
             treeLength -= 2 * pii;
         }
-        treeLength -= 1;
+        //treeLength -= 1;
         //treeLength = calcTreeLength();
         return treeLength;
     }
@@ -122,36 +122,6 @@ public class OneTree {
         }
     }
 
-//    private double findSpinningTreeOld(){
-//        HashSet<Integer> unReachedNodes = new HashSet<>();
-//        for (int node = 2; node < costMatrix.length; ++node){
-//            unReachedNodes.add(node);
-//        }
-//        HashSet<Integer> reachedNodes = new HashSet<>();
-//        reachedNodes.add(1);
-//        treeNodes[1] = new TreeNode(1, null);
-//        double spinningTreeLength = 0;
-//        while(!unReachedNodes.isEmpty()){
-//            double minCost = Double.MAX_VALUE;
-//            int[] minEdge = new int[2];
-//            for (Integer uNode : unReachedNodes){
-//                for (Integer rNode : reachedNodes){
-//                    double edgeCost = costMatrix[uNode][rNode] + pi[uNode] + pi[rNode];
-//                    if (Double.compare(edgeCost, minCost) < 0){
-//                        minCost = edgeCost;
-//                        minEdge[0] = uNode;
-//                        minEdge[1] = rNode;
-//                    }
-//                }
-//            }
-//            unReachedNodes.remove(minEdge[0]);
-//            reachedNodes.add(minEdge[0]);
-//            spinningTreeLength += minCost;
-//            treeNodes[minEdge[0]] = treeNodes[minEdge[1]].addChild(minEdge[0]);
-//        }
-//        return spinningTreeLength;
-//    }
-
     boolean hasEdge(int a, int b){
         if (a == 0){
             return specialConnections[0] == b || specialConnections[1] == b;
@@ -161,18 +131,6 @@ public class OneTree {
             return treeNodes[a].father == treeNodes[b] || treeNodes[b].father == treeNodes[a];
         }
     }
-
-//    private double calcTreeLength(TreeNode root){
-//        if (root.children.isEmpty()){
-//            return 0;
-//        }else{
-//            double cost = 0;
-//            for (TreeNode child : root.children){
-//                cost += costMatrix[root.data][child.data] + calcTreeLength(treeNodes[child.data]);
-//            }
-//            return cost;
-//        }
-//    }
 
     private class TreeNode{
         TreeNode father;
@@ -191,7 +149,4 @@ public class OneTree {
         }
     }
 
-//    private double calcTreeLength(){
-//        return calcTreeLength(treeNodes[root]) + costMatrix[0][specialConnections[0]] + costMatrix[0][specialConnections[1]];
-//    }
 }

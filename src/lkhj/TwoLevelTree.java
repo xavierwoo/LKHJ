@@ -353,41 +353,6 @@ class TwoLevelTree {
                 }
             }
         }
-//        if (parents[0] != null && parents[0].nextParent == parents[1]){
-//            if (parents[0].size + parents[1].size > lower
-//                    && parents[0].size + parents[1].size < upper){
-//                mergeParBToParA(parents[0], parents[1]);
-//            }else{
-//                if (parents[0].size < lower){
-//                    mergeParBToParA(parents[0].previousParent, parents[0]);
-//                }
-//                if (parents[1].size < lower){
-//                    mergeParBToParA(parents[1], parents[1].nextParent);
-//                }
-//            }
-//        }else if (parents[1] != null && parents[1].nextParent == parents[0]){
-//            if (parents[0].size + parents[1].size > lower
-//                    && parents[0].size + parents[1].size < upper){
-//                mergeParBToParA(parents[1], parents[0]);
-//            }else{
-//                if (parents[1].size < lower){
-//                    mergeParBToParA(parents[1].previousParent, parents[1]);
-//                }
-//                if (parents[0].size < lower){
-//                    mergeParBToParA(parents[0], parents[0].nextParent);
-//                }
-//            }
-//        }else{
-//            for (Parent parent : parents){
-//            if(parent == null)continue;
-//            if (parent.size > lower)continue;
-//            if (parent.previousParent.size < parent.nextParent.size){
-//                mergeParBToParA(parent.previousParent, parent);
-//            }else{
-//                mergeParBToParA(parent, parent.nextParent);
-//            }
-//        }
-//        }
 
         reSortAllParentID();
     }

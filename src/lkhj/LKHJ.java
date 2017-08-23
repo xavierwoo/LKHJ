@@ -10,7 +10,8 @@ import java.util.*;
 public class LKHJ {
 
     private int MAX_CANDIDATES = 5;
-    private int MAX_MOVE_LEVEL = 5;
+    private int MAX_MOVE_LEVEL = 10;
+    private int MAX_RUN_TIMES = 10;
     private Random random;
     private double[][] costMatrix;
     private TwoLevelTree tree;
@@ -23,7 +24,10 @@ public class LKHJ {
     public LKHJ(double[][] costMatrix, Random random){
         this.costMatrix = costMatrix;
         this.random = random;
+    }
 
+    public void setMAX_RUN_TIMES(int max){
+        MAX_RUN_TIMES = max;
     }
 
     public void setMAX_CANDIDATES(int max){
@@ -54,9 +58,11 @@ public class LKHJ {
                     ->Double.compare(costMatrix[index][integer] + pi[integer], costMatrix[index][t1] + pi[t1]));
         }
 
-        for (ArrayList<Integer> line : candidatesTable){
-            line.subList(nearestCount, line.size()).clear();
-            line.trimToSize();
+        if (costMatrix.length > nearestCount) {
+            for (ArrayList<Integer> line : candidatesTable) {
+                line.subList(nearestCount, line.size()).clear();
+                line.trimToSize();
+            }
         }
     }
 
@@ -153,7 +159,7 @@ public class LKHJ {
         genNearestTable(MAX_CANDIDATES);
 
 
-        for (int run = 0; run < 10; ++run) {
+        for (int run = 0; run < MAX_RUN_TIMES; ++run) {
             System.out.println("Run #" + run);
             genInitialTour(oneTree);
             int iter = 0;
