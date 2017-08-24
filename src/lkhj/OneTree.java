@@ -28,28 +28,49 @@ class OneTree {
 
     private double getTreeLength(){
         double spinningTreeLength = findSpinningTree();
-        double min[] = new double[2];
-        min[0] = min[1] = Double.MAX_VALUE;
-        for (int i=1; i<costMatrix.length; ++i){
-            double edgeCost = costMatrix[0][i] + pi[i] + pi[0];
-            if (edgeCost < min[0] && edgeCost < min[1]){
-                if (min[0] < min[1]){
-                    min[1] = edgeCost;
-                    specialConnections[1] = i;
-                }else{
-                    min[0] = edgeCost;
-                    specialConnections[0] = i;
+
+        double maxSpecial = -Double.MAX_VALUE;
+        for (TreeNode tn : treeNodes){
+            if (!tn.children.isEmpty())continue;
+            double minDistance = Double.MAX_VALUE;
+            int nearestNode = -1;
+            for (int n = 0; n < costMatrix.length; ++n){
+                if (n != tn.father.data && n != tn.data && costMatrix[tn.data][n] < minDistance){
+                    minDistance = costMatrix[tn.data][n];
+                    nearestNode = n;
                 }
-            }else if (edgeCost < min[0] && Double.compare(edgeCost, min[1]) >= 0){
-                min[0] = edgeCost;
-                specialConnections[0] = i;
-            }else if (Double.compare(edgeCost, min[0]) >= 0 && edgeCost < min[1]){
-                min[1] = edgeCost;
-                specialConnections[1] = i;
+            }
+            if(minDistance > maxSpecial){
+                maxSpecial = minDistance;
+                specialConnections[0] = tn.data;
+                specialConnections[1] = nearestNode;
             }
         }
 
-        treeLength = spinningTreeLength + min[0] + min[1];
+        treeLength = spinningTreeLength + maxSpecial;
+
+//        double min[] = new double[2];
+//        min[0] = min[1] = Double.MAX_VALUE;
+//        for (int i=1; i<costMatrix.length; ++i){
+//            double edgeCost = costMatrix[0][i] + pi[i] + pi[0];
+//            if (edgeCost < min[0] && edgeCost < min[1]){
+//                if (min[0] < min[1]){
+//                    min[1] = edgeCost;
+//                    specialConnections[1] = i;
+//                }else{
+//                    min[0] = edgeCost;
+//                    specialConnections[0] = i;
+//                }
+//            }else if (edgeCost < min[0] && Double.compare(edgeCost, min[1]) >= 0){
+//                min[0] = edgeCost;
+//                specialConnections[0] = i;
+//            }else if (Double.compare(edgeCost, min[0]) >= 0 && edgeCost < min[1]){
+//                min[1] = edgeCost;
+//                specialConnections[1] = i;
+//            }
+//        }
+//
+//        treeLength = spinningTreeLength + min[0] + min[1];
         for (double pii : pi){
             treeLength -= 2 * pii;
         }
@@ -63,14 +84,14 @@ class OneTree {
         Arrays.fill(E, -1);
         FibonacciHeap<Integer> Q = new FibonacciHeap<>();
         ArrayList<FibonacciHeapNode<Integer>> fbNodes = new ArrayList<>();
-        for (int i=1; i< costMatrix.length; ++i){
+        for (int i=0; i< costMatrix.length; ++i){
             FibonacciHeapNode<Integer> node = new FibonacciHeapNode<>(i);
             Q.insert(node, C[i]);
             fbNodes.add(node);
         }
         boolean[] isInQ = new boolean[costMatrix.length];
         Arrays.fill(isInQ, true);
-        isInQ[0] = false;
+        //isInQ[0] = false;
 
         double spinningTreeLength = 0;
 
@@ -87,12 +108,12 @@ class OneTree {
             }
 
 
-            for (int w=1; w<costMatrix.length; ++w){
+            for (int w=0; w<costMatrix.length; ++w){
                 if (w == v || !isInQ[w])continue;
                 double edgeLength = costMatrix[v][w] + pi[v] + pi[w];
                 if (edgeLength < C[w]){
                     C[w] = edgeLength;
-                    Q.decreaseKey(fbNodes.get(w-1), C[w]);
+                    Q.decreaseKey(fbNodes.get(w), C[w]);
                     E[w] = v;
                 }
             }
@@ -102,17 +123,19 @@ class OneTree {
     }
 
     int getDegree(int i){
-        if (i == 0){
-            return 2;
-        }else if (i ==1){
-            return treeNodes[1].children.size()
-                    + (specialConnections[0] == 1 ? 1 : 0)
-                    + (specialConnections[1] == 1 ? 1 : 0);
-        }else{
-            return treeNodes[i].children.size() +1
-                    + (specialConnections[0] == i ? 1 : 0)
-                    + (specialConnections[1] == i ? 1 : 0);
-        }
+        return treeNodes[i].children.size() + (treeNodes[i].father != null ? 1 : 0)
+                + (specialConnections[0] == i ? 1 : 0) + (specialConnections[1] == i ? 1 : 0);
+//        if (i == 0){
+//            return 2;
+//        }else if (i ==1){
+//            return treeNodes[1].children.size()
+//                    + (specialConnections[0] == 1 ? 1 : 0)
+//                    + (specialConnections[1] == 1 ? 1 : 0);
+//        }else{
+//            return treeNodes[i].children.size() +1
+//                    + (specialConnections[0] == i ? 1 : 0)
+//                    + (specialConnections[1] == i ? 1 : 0);
+//        }
     }
 
     boolean hasEdge(int a, int b){
