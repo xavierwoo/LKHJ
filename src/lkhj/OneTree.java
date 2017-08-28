@@ -125,17 +125,6 @@ class OneTree {
     int getDegree(int i){
         return treeNodes[i].children.size() + (treeNodes[i].father != null ? 1 : 0)
                 + (specialConnections[0] == i ? 1 : 0) + (specialConnections[1] == i ? 1 : 0);
-//        if (i == 0){
-//            return 2;
-//        }else if (i ==1){
-//            return treeNodes[1].children.size()
-//                    + (specialConnections[0] == 1 ? 1 : 0)
-//                    + (specialConnections[1] == 1 ? 1 : 0);
-//        }else{
-//            return treeNodes[i].children.size() +1
-//                    + (specialConnections[0] == i ? 1 : 0)
-//                    + (specialConnections[1] == i ? 1 : 0);
-//        }
     }
 
     boolean hasEdge(int a, int b){

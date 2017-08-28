@@ -1,5 +1,6 @@
 import lkhj.InstanceReader;
 import lkhj.LKHJ;
+import lkhj.TwoLevelTree;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -46,7 +47,7 @@ public class Main {
     }
 
     static void testRandom() throws IOException {
-        Random random = new Random(0);
+        Random random = new Random(1);
 
         int num = 1000;
         double[][] mat = genOptTandomMatrix(num, 2, 100, random);
@@ -88,7 +89,19 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        testRandom();
+        //testRandom();
         //testFileInstance();
+
+        int[] tour = new int[100];
+
+        for (int i=0; i < tour.length; ++i){
+            tour[i] = i;
+        }
+
+        TwoLevelTree tree = new TwoLevelTree(tour);
+        tree.printTour();
+        tree.nonSequ4Exhange(0,1,6,7,8,9,3,4);
+        tree.printTour();
+        System.out.println(tree.checkTree());
     }
 }

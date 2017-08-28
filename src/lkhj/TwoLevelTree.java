@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * Solve fractional TSP using two level tree structure
  * Created by Xavier on 2017/6/6.
  */
-class TwoLevelTree {
+public class TwoLevelTree {
 
     final private double lower;
     final private double upper;
@@ -15,11 +15,11 @@ class TwoLevelTree {
     private Parent headParent = null;
 
 
-    TwoLevelTree(int[] tour) {
+    public TwoLevelTree(int[] tour) {
 
         //initialize all city segments
         citysElements = new Element[tour.length];
-        for (int i=0; i<tour.length; ++i){
+        for (int i = 0; i < tour.length; ++i) {
             citysElements[i] = new Element(i);
         }
 
@@ -27,7 +27,7 @@ class TwoLevelTree {
         upper = lower * 4;
 
         //build the two level tree
-        int stdParentSize = (int)lower*2;
+        int stdParentSize = (int) lower * 2;
         Parent parent = new Parent();
         for (int i : tour) {
             Element element = citysElements[i];
@@ -40,20 +40,111 @@ class TwoLevelTree {
         if (parent.size > 0 && parent.size < stdParentSize) {
             addParent(parent);
         }
-        if (headParent.previousParent.size < lower){
+        if (headParent.previousParent.size < lower) {
             mergeParBToParA(headParent.previousParent, headParent);
             headParent = headParent.previousParent;
             reSortAllParentID();
         }
     }
 
-//    private void printTour() {
-//        int[] tour = getCurrentTour();
-//        for (int city : tour) {
-//            System.out.print(city + " ");
-//        }
-//        System.out.println();
-//    }
+    public void printTour() {
+        int[] tour = getCurrentTour();
+        for (int city : tour) {
+            System.out.print(city + " ");
+        }
+        System.out.println();
+    }
+
+    private boolean isFeasibleNS4E(int t1, int t2, int t3, int t4, int t5, int t6, int t7, int t8) {
+        return (next(t1) == t2 && next(t3) == t4 && next(t5) == t6 && next(t7) == t8)
+                &&
+                between(t1, t7, t3) && between(t7, t3, t5) && between(t3, t5, t1) && between(t5, t1, t7);
+    }
+
+    public void nonSequ4Exhange(int t1, int t2, int t3, int t4, int t5, int t6, int t7, int t8) {
+        if (!isFeasibleNS4E(t1, t2, t3, t4, t5, t6, t7, t8)) {
+            throw new Error("Infeasible 4 exchange");
+        }
+
+        //if the operate consist of a sequence of consecutive segments
+        if (citysElements[t1].parent != citysElements[t2].parent
+                && citysElements[t3].parent != citysElements[t4].parent
+                && citysElements[t5].parent != citysElements[t6].parent
+                && citysElements[t7].parent != citysElements[t8].parent) {
+            rearrangeSegments(citysElements[t1].parent, citysElements[t2].parent,
+                    citysElements[t3].parent, citysElements[t4].parent,
+                    citysElements[t5].parent, citysElements[t6].parent,
+                    citysElements[t7].parent, citysElements[t8].parent);
+
+            //all nodes in the same segment
+        } else if (citysElements[t1].parent == citysElements[t2].parent
+                && citysElements[t1].parent == citysElements[t3].parent
+                && citysElements[t1].parent == citysElements[t4].parent
+                && citysElements[t1].parent == citysElements[t5].parent
+                && citysElements[t1].parent == citysElements[t6].parent
+                && citysElements[t1].parent == citysElements[t7].parent
+                && citysElements[t1].parent == citysElements[t8].parent) {
+            nonCon4ExchangeInSegment(t1, t2, t3, t4, t5, t6, t7, t8);
+        } else {
+            throw new Error("Not supported yet!");
+        }
+    }
+
+    private void conElementsInSegment(int a, int b) {
+        Element ae = citysElements[a];
+        Element be = citysElements[b];
+
+        if (ae.parent.isReverse) {
+            ae.previousElement = be;
+        } else {
+            ae.nextElement = be;
+        }
+        if (be.parent.isReverse) {
+            be.nextElement = ae;
+        } else {
+            be.previousElement = ae;
+        }
+    }
+
+    private void nonCon4ExchangeInSegment(int t1, int t2,
+                                          int t3, int t4,
+                                          int t5, int t6,
+                                          int t7, int t8) {
+        conElementsInSegment(t1, t4);
+        conElementsInSegment(t5, t8);
+        conElementsInSegment(t3, t2);
+        conElementsInSegment(t7, t6);
+        resortElemID(citysElements[t1].parent);
+    }
+
+    private void conParentFor4Exchange(Parent ap, Parent bp) {
+        if (ap.isReverse) {
+            ap.beginElement.previousElement = bp.isReverse ? bp.endElement : bp.beginElement;
+            if (bp.isReverse) {
+                bp.endElement.nextElement = ap.beginElement;
+            } else {
+                bp.beginElement.previousElement = ap.beginElement;
+            }
+        } else {
+            ap.endElement.nextElement = bp.isReverse ? bp.endElement : bp.beginElement;
+            if (bp.isReverse) {
+                bp.endElement.nextElement = ap.endElement;
+            } else {
+                bp.beginElement.previousElement = ap.endElement;
+            }
+        }
+    }
+
+    private void rearrangeSegments(Parent t1p, Parent t2p,
+                                   Parent t3p, Parent t4p,
+                                   Parent t5p, Parent t6p,
+                                   Parent t7p, Parent t8p) {
+        conParentFor4Exchange(t1p, t4p);
+        conParentFor4Exchange(t5p, t8p);
+        conParentFor4Exchange(t3p, t2p);
+        conParentFor4Exchange(t7p, t6p);
+        reSortAllParentID();
+    }
 
     private void addParent(Parent parent) {
         if (headParent != null) {
@@ -119,12 +210,12 @@ class TwoLevelTree {
                 return false;
             }
             currParent = currParent.nextParent;
-            if (count > parentsNum){
+            if (count > parentsNum) {
                 System.err.println("parent number error 1");
                 return false;
             }
         }
-        if (count != parentsNum){
+        if (count != parentsNum) {
             System.err.println("parent number error 2");
             return false;
         }
@@ -133,7 +224,7 @@ class TwoLevelTree {
         //backward direction
         for (count = 1, currParent = headParent.previousParent; currParent != headParent; ++count) {
             currParent = currParent.previousParent;
-            if (count > parentsNum){
+            if (count > parentsNum) {
                 System.err.println("parent number error 3");
                 return false;
             }
@@ -150,14 +241,14 @@ class TwoLevelTree {
             ++count;
             currElement = currElement.parent.isReverse ? currElement.previousElement : currElement.nextElement;
 
-            if (count > citysElements.length){
+            if (count > citysElements.length) {
                 System.err.println("elements number error 1");
                 return false;
             }
         } while (currElement != (headParent.isReverse ? headParent.endElement : headParent.beginElement));
 
 
-        if ( count != citysElements.length){
+        if (count != citysElements.length) {
             System.err.println("elements number error ");
             return false;
         }
@@ -165,10 +256,10 @@ class TwoLevelTree {
         //check reverse
         currElement = headParent.isReverse ? headParent.beginElement : headParent.endElement;
         count = 0;
-        do{
+        do {
             ++count;
             currElement = currElement.parent.isReverse ? currElement.nextElement : currElement.previousElement;
-            if (count > citysElements.length){
+            if (count > citysElements.length) {
                 System.err.println("elements number error ");
                 return false;
             }
@@ -186,10 +277,10 @@ class TwoLevelTree {
         return parent.checkElementRelation();
     }
 
-    private boolean checkBalance(){
+    private boolean checkBalance() {
         Parent parent;
         for (parent = headParent; parent != headParent.previousParent; parent = parent.nextParent) {
-            if (parent.size < lower || parent.size > upper){
+            if (parent.size < lower || parent.size > upper) {
                 System.err.println("checkBalance error 1");
                 return false;
             }
@@ -198,7 +289,7 @@ class TwoLevelTree {
         return parent.size >= (int) lower && parent.size <= (int) upper;
     }
 
-    boolean checkTree() {
+    public boolean checkTree() {
         return checkParentsConnection()
                 && checkElementsConnection()
                 && checkParentElementsRelation()
@@ -227,7 +318,7 @@ class TwoLevelTree {
                 : citysElements[a].previousElement.cityID;
     }
 
-    int getHeadCityID(){
+    int getHeadCityID() {
         return headParent.isReverse ? headParent.endElement.cityID : headParent.beginElement.cityID;
     }
 
@@ -290,7 +381,7 @@ class TwoLevelTree {
      * @param d index
      */
     void flip(int a, int b, int c, int d) {
-        if (a != next(b) || d != next(c)){
+        if (a != next(b) || d != next(c)) {
             throw new Error("Infeasible flip!");
         }
 
@@ -304,11 +395,11 @@ class TwoLevelTree {
             }
 
             //check if a-c lies in one segment
-        } else if (liesInOneSegment(a,c)) {
+        } else if (liesInOneSegment(a, c)) {
             flipWithinSegment(a, c);
 
             //check if a-c lies in one segment
-        } else if (liesInOneSegment(d,b)) {
+        } else if (liesInOneSegment(d, b)) {
             flipWithinSegment(d, b);
 
         } else {
@@ -318,37 +409,37 @@ class TwoLevelTree {
         }
     }
 
-    private boolean liesInOneSegment(int a, int c){
+    private boolean liesInOneSegment(int a, int c) {
         Element elemA = citysElements[a];
         Element elemC = citysElements[c];
         if (elemA.parent != elemC.parent) return false;
 
         Element elem = elemA;
-        while(elem != elemC){
+        while (elem != elemC) {
             if (elem.parent != elemA.parent) return false;
             elem = elem.parent.isReverse ? elem.previousElement : elem.nextElement;
         }
         return true;
     }
 
-    boolean hasEdge(int a, int b){
+    boolean hasEdge(int a, int b) {
         return next(a) == b || next(b) == a;
     }
 
-    private void mergeParents(ArrayList<Parent> parents){
-        while(!parents.isEmpty()){
-            Parent parent = parents.get(parents.size()-1);
-            parents.remove(parents.size()-1);
+    private void mergeParents(ArrayList<Parent> parents) {
+        while (!parents.isEmpty()) {
+            Parent parent = parents.get(parents.size() - 1);
+            parents.remove(parents.size() - 1);
 
-            if (parent.size > lower)continue;
+            if (parent.size > lower) continue;
 
-            if (parent.previousParent.size < parent.nextParent.size){
+            if (parent.previousParent.size < parent.nextParent.size) {
                 mergeParBToParA(parent.previousParent, parent);
-            }else{
+            } else {
                 Parent nextPar = parent.nextParent;
                 mergeParBToParA(parent, nextPar);
                 parents.remove(nextPar);
-                if (parent.size < lower){
+                if (parent.size < lower) {
                     parents.add(parent);
                 }
             }
@@ -357,29 +448,29 @@ class TwoLevelTree {
         reSortAllParentID();
     }
 
-    private void mergeParBToParA(Parent A, Parent B){
+    private void mergeParBToParA(Parent A, Parent B) {
         Element currElem = B.beginElement;
-        for(;;){
+        for (; ; ) {
             currElem.parent = A;
-            if (currElem == B.endElement)break;
+            if (currElem == B.endElement) break;
             currElem = currElem.nextElement;
         }
 
         A.size += B.size;
-        if (!A.isReverse && !B.isReverse){
+        if (!A.isReverse && !B.isReverse) {
             A.endElement = B.endElement;
-        } else if (A.isReverse && B.isReverse){
+        } else if (A.isReverse && B.isReverse) {
             A.beginElement = B.beginElement;
-        } else if (!A.isReverse){
+        } else if (!A.isReverse) {
             reverseElements(B.beginElement, B.endElement);
             A.endElement.nextElement = B.endElement;
             B.endElement.previousElement = A.endElement;
             A.endElement = B.beginElement;
             A.endElement.nextElement = B.nextParent.isReverse ?
                     B.nextParent.endElement : B.nextParent.beginElement;
-            if (B.nextParent.isReverse){
+            if (B.nextParent.isReverse) {
                 B.nextParent.endElement.nextElement = A.endElement;
-            }else{
+            } else {
                 B.nextParent.beginElement.previousElement = A.endElement;
             }
         } else {
@@ -388,11 +479,11 @@ class TwoLevelTree {
             B.beginElement.previousElement = A.beginElement;
             A.beginElement = A.endElement;
             A.endElement = B.endElement;
-            A.beginElement.previousElement = A.previousParent.isReverse?
+            A.beginElement.previousElement = A.previousParent.isReverse ?
                     A.previousParent.beginElement : A.previousParent.endElement;
-            if(A.previousParent.isReverse){
+            if (A.previousParent.isReverse) {
                 A.previousParent.beginElement.previousElement = A.beginElement;
-            }else {
+            } else {
                 A.previousParent.endElement.nextElement = A.beginElement;
             }
             A.isReverse = false;
@@ -400,21 +491,21 @@ class TwoLevelTree {
         A.nextParent = B.nextParent;
         B.nextParent.previousParent = A;
         //B.isAbandoned = true;
-        if(headParent == B){
+        if (headParent == B) {
             headParent = A;
         }
         resortElemID(A);
-        if (A.size > upper){
+        if (A.size > upper) {
             splitByHalf(A);
         }
     }
 
-    private void splitByHalf(Parent parent){
+    private void splitByHalf(Parent parent) {
         Parent newPar = new Parent();
         Element cutElem = parent.isReverse ? parent.endElement : parent.beginElement;
         int count = 1;
 
-        while(count < lower * 2){
+        while (count < lower * 2) {
             cutElem = parent.isReverse ? cutElem.previousElement : cutElem.nextElement;
             ++count;
         }
@@ -423,11 +514,11 @@ class TwoLevelTree {
         newPar.size = parent.size - count;
         parent.size = count;
 
-        if (newPar.isReverse){
+        if (newPar.isReverse) {
             newPar.beginElement = parent.beginElement;
             parent.beginElement = cutElem;
             newPar.endElement = cutElem.previousElement;
-        }else{
+        } else {
             newPar.endElement = parent.endElement;
             parent.endElement = cutElem;
             newPar.beginElement = cutElem.nextElement;
@@ -439,8 +530,8 @@ class TwoLevelTree {
         parent.nextParent = newPar;
 
         Element currElem = newPar.isReverse ? newPar.endElement : newPar.beginElement;
-        while(currElem != (newPar.isReverse ?
-        newPar.beginElement : newPar.endElement)){
+        while (currElem != (newPar.isReverse ?
+                newPar.beginElement : newPar.endElement)) {
             currElem.parent = newPar;
             currElem = newPar.isReverse ? currElem.previousElement : currElem.nextElement;
         }
@@ -448,22 +539,22 @@ class TwoLevelTree {
         ++parentsNum;
     }
 
-    private void resortElemID(Parent parent){
+    private void resortElemID(Parent parent) {
         int count = 0;
         Element currElem = parent.beginElement;
-        do{
+        do {
             currElem.ID = count++;
             currElem = currElem.nextElement;
-        }while(currElem != parent.endElement);
+        } while (currElem != parent.endElement);
         currElem.ID = count;
     }
 
-    private void reverseElements(Element ElemA, Element ElemB){
-        if (ElemA == ElemB)return;
+    private void reverseElements(Element ElemA, Element ElemB) {
+        if (ElemA == ElemB) return;
         Element currElem = ElemA;
         Element nextNextElem = ElemA.nextElement;
 
-        while(currElem != ElemB.previousElement){
+        while (currElem != ElemB.previousElement) {
             Element nextElem = nextNextElem;
             nextNextElem = nextElem.nextElement;
             currElem.previousElement = nextElem;
@@ -474,7 +565,7 @@ class TwoLevelTree {
         ElemB.nextElement = currElem;
     }
 
-    private ArrayList<Parent> splitSegmentToFitFlip(int a, int b, int c, int d){
+    private ArrayList<Parent> splitSegmentToFitFlip(int a, int b, int c, int d) {
         Parent aPar = citysElements[a].parent;
         Parent bPar = citysElements[b].parent;
         Parent cPar = citysElements[c].parent;
@@ -483,12 +574,12 @@ class TwoLevelTree {
         ArrayList<Parent> smallParents = new ArrayList<>();
 
         //split b-a
-        if (aPar == bPar){
+        if (aPar == bPar) {
             splitSegment(b, a, smallParents);
         }
 
         //split c-d
-        if (cPar == dPar){
+        if (cPar == dPar) {
             splitSegment(c, d, smallParents);
         }
 
@@ -496,12 +587,12 @@ class TwoLevelTree {
         return smallParents;
     }
 
-    private void reSortAllParentID(){
+    private void reSortAllParentID() {
         Parent currPar = headParent;
         int count;
         for (count = 0;
-             currPar.nextParent  != headParent;
-             ++count, currPar = currPar.nextParent){
+             currPar.nextParent != headParent;
+             ++count, currPar = currPar.nextParent) {
             currPar.ID = count;
         }
 
@@ -509,7 +600,7 @@ class TwoLevelTree {
         parentsNum = count + 1;
     }
 
-    private void splitSegment(int b, int a, ArrayList<Parent> smallParents){
+    private void splitSegment(int b, int a, ArrayList<Parent> smallParents) {
 
         Parent oriPar = citysElements[b].parent;
         Parent newPar = new Parent();
@@ -518,10 +609,10 @@ class TwoLevelTree {
                 citysElements[a].ID - oriPar.beginElement.ID + 1 :
                 oriPar.endElement.ID - citysElements[a].ID + 1;
         newPar.isReverse = oriPar.isReverse;
-        if (newPar.isReverse){
+        if (newPar.isReverse) {
             newPar.endElement = citysElements[a];
             newPar.beginElement = oriPar.beginElement;
-        }else{
+        } else {
             newPar.beginElement = citysElements[a];
             newPar.endElement = oriPar.endElement;
         }
@@ -529,9 +620,9 @@ class TwoLevelTree {
         oriPar.size = oriPar.isReverse ?
                 oriPar.endElement.ID - citysElements[b].ID + 1 :
                 citysElements[b].ID - oriPar.beginElement.ID + 1;
-        if (oriPar.isReverse){
+        if (oriPar.isReverse) {
             oriPar.beginElement = citysElements[b];
-        }else{
+        } else {
             oriPar.endElement = citysElements[b];
         }
 
@@ -541,7 +632,7 @@ class TwoLevelTree {
         newPar.nextParent.previousParent = newPar;
 
         Element currElem = newPar.beginElement;
-        while(currElem != newPar.endElement){
+        while (currElem != newPar.endElement) {
             currElem.parent = newPar;
             currElem = currElem.nextElement;
         }
@@ -696,14 +787,14 @@ class TwoLevelTree {
             citysElements[a].nextElement = nextCElem;
         }
 
-        if (currParent.isReverse){
-            if (a== currParent.endElement.cityID){
+        if (currParent.isReverse) {
+            if (a == currParent.endElement.cityID) {
                 currParent.endElement = citysElements[c];
             }
-            if (c == currParent.beginElement.cityID){
+            if (c == currParent.beginElement.cityID) {
                 currParent.beginElement = citysElements[a];
             }
-        }else {
+        } else {
             if (a == currParent.beginElement.cityID) {
                 currParent.beginElement = citysElements[c];
             }
@@ -755,12 +846,12 @@ class TwoLevelTree {
             Element element = isReverse ? endElement : beginElement;
             int count = 1;
 
-            while(element != (isReverse ? beginElement : endElement)){
-                if (count > size){
+            while (element != (isReverse ? beginElement : endElement)) {
+                if (count > size) {
                     System.err.println("tour element number error 1");
                     return false;
                 }
-                if (element.parent != this){
+                if (element.parent != this) {
                     System.err.println("tour element number error 2");
                     return false;
                 }
