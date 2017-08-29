@@ -63,7 +63,9 @@ public class TwoLevelTree {
 
     public void nonSequ4Exhange(int t1, int t2, int t3, int t4, int t5, int t6, int t7, int t8) {
         if (!isFeasibleNS4E(t1, t2, t3, t4, t5, t6, t7, t8)) {
-            throw new Error("Infeasible 4 exchange");
+            throw new Error("Infeasible 4 exchange: " + t1 +" " +
+                    t2 + " " + t3 + " " + t4 + " " +
+                    t5 + " " + t6 + " " + t7 + " " + t8);
         }
 
         //if the operate consist of a sequence of consecutive segments
@@ -86,8 +88,29 @@ public class TwoLevelTree {
                 && citysElements[t1].parent == citysElements[t8].parent) {
             nonCon4ExchangeInSegment(t1, t2, t3, t4, t5, t6, t7, t8);
         } else {
-            throw new Error("Not supported yet!");
+            ArrayList<Parent> smallP = splitToFitNS4Exchange(t1, t2, t3, t4, t5, t6, t7, t8);
+            nonSequ4Exhange(t1, t2, t3, t4, t5, t6, t7, t8);
+            mergeParents(smallP);
         }
+    }
+
+    private ArrayList<Parent> splitToFitNS4Exchange(int t1, int t2, int t3, int t4,
+                                                    int t5, int t6, int t7, int t8){
+        ArrayList<Parent> smallParent = new ArrayList<>();
+        if (citysElements[t1].parent == citysElements[t2].parent){
+            splitSegment(t1, t2, smallParent);
+        }
+        if (citysElements[t3].parent == citysElements[t4].parent){
+            splitSegment(t3, t4, smallParent);
+        }
+        if (citysElements[t5].parent == citysElements[t6].parent){
+            splitSegment(t5, t6, smallParent);
+        }
+        if (citysElements[t7].parent == citysElements[t8].parent){
+            splitSegment(t7,t8,smallParent);
+        }
+        reSortAllParentID();
+        return smallParent;
     }
 
     private void conElementsInSegment(int a, int b) {
@@ -133,6 +156,8 @@ public class TwoLevelTree {
                 bp.beginElement.previousElement = ap.endElement;
             }
         }
+        ap.nextParent = bp;
+        bp.previousParent = ap;
     }
 
     private void rearrangeSegments(Parent t1p, Parent t2p,
@@ -358,7 +383,7 @@ public class TwoLevelTree {
         }
     }
 
-    int[] getCurrentTour() {
+    public int[] getCurrentTour() {
         int[] tour = new int[citysElements.length];
         int count = 0;
         Element elm = headParent.isReverse ? headParent.endElement : headParent.beginElement;
@@ -369,6 +394,17 @@ public class TwoLevelTree {
         } while (elm != (headParent.isReverse ? headParent.endElement : headParent.beginElement));
 
         return tour;
+    }
+
+    public ArrayList<Integer> getPath(int from, int to){
+        ArrayList<Integer> path = new ArrayList<>();
+        Element currentElm = citysElements[from];
+
+        while(currentElm != citysElements[to]){
+            path.add(currentElm.cityID);
+            currentElm = currentElm.parent.isReverse ? currentElm.previousElement : currentElm.nextElement;
+        }
+        return path;
     }
 
     /**
@@ -638,8 +674,8 @@ public class TwoLevelTree {
         }
         newPar.endElement.parent = newPar;
 
-        if (oriPar.size < lower) smallParents.add(oriPar);
-        if (newPar.size < lower) smallParents.add(newPar);
+        if (oriPar.size < lower && !smallParents.contains(oriPar)) smallParents.add(oriPar);
+        if (newPar.size < lower && !smallParents.contains(newPar)) smallParents.add(newPar);
     }
 
     private boolean ac_IsShorterThan_bd(int a, int b, int c, int d) {

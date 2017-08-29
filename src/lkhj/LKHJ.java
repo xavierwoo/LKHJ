@@ -163,7 +163,7 @@ public class LKHJ {
             System.out.println("Run #" + run);
             genInitialTour(oneTree);
             int iter = 0;
-            while (LKMove()) {
+            while (LKMove() || nonSq4Move()) {
                 ++iter;
                 if (iter %1000 == 0){
                     printObjAndGap();
@@ -200,6 +200,37 @@ public class LKHJ {
     private boolean isFeasibleFlipMove(int t1, int t2, int t3, int t4){
         return t2 != t4 && t3 != t1 && t1 != t4
                 && tree.between(t4, t2, t1) && tree.between(t1, t3, t4);
+    }
+
+    private boolean nonSq4Move(){
+        for (int t1 = 0; t1 < costMatrix.length; ++t1){
+            int t2 = tree.next(t1);
+            for (int t3 : candidatesTable.get(t2)){
+                if (t3 == t1)continue;
+                int t4 = tree.next(t3);
+                if (t4 == t1 || t4 == t2)continue;
+                double delta1 = costMatrix[t2][t3] + costMatrix[t4][t1]
+                        - costMatrix[t1][t2] - costMatrix[t3][t4];
+                if (Double.compare(delta1, 0) > 0)continue;
+                ArrayList<Integer> candidateT5 = tree.getPath(t4, t1);
+                for (int t5 : candidateT5){
+                    int t6 = tree.next(t5);
+                    for (int t7 : candidatesTable.get(t6)){
+                        if (t7 == t5 || t7 == 4 || t7 == t3 || t7 == t2 || t7 ==  t1
+                                || !tree.between(t1, t7, t3))continue;
+                        int t8 = tree.next(t7);
+                        double delta2 = costMatrix[t6][t7] + costMatrix[t8][t5]
+                                - costMatrix[t5][t6] - costMatrix[t7][t8];
+                        if (Double.compare(delta1 + delta2, 0) < 0){
+                            tree.nonSequ4Exhange(t1,t2,t3,t4,t5,t6,t7,t8);
+                            objective += delta1 + delta2;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void printLog(String string){
