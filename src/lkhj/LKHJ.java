@@ -12,6 +12,7 @@ public class LKHJ {
     private int MAX_CANDIDATES = 5;
     private int MAX_MOVE_LEVEL = 10;
     private int MAX_RUN_TIMES = 10;
+    private double PRECISENESS = 1.0e-10;
     private Random random;
     private double[][] costMatrix;
     private TwoLevelTree tree;
@@ -37,6 +38,8 @@ public class LKHJ {
     public void setMAX_MOVE_LEVEL(int max){
         MAX_MOVE_LEVEL = max;
     }
+
+    public void setPRECISENESS(int preciseness){ PRECISENESS = preciseness;}
 
     private void genNearestTable(int nearestCount){
         candidatesTable = new ArrayList<>();
@@ -163,11 +166,16 @@ public class LKHJ {
             System.out.println("Run #" + run);
             genInitialTour(oneTree);
             int iter = 0;
+            double preObj = objective;
             while (LKMove() || nonSq4Move()) {
                 ++iter;
                 if (iter %1000 == 0){
                     printObjAndGap();
                 }
+                if (Math.abs(preObj - objective) < PRECISENESS){
+                    break;
+                }
+                preObj = objective;
             }
 
             //recalculate the objective
@@ -221,10 +229,20 @@ public class LKHJ {
                         int t8 = tree.next(t7);
                         double delta2 = costMatrix[t6][t7] + costMatrix[t8][t5]
                                 - costMatrix[t5][t6] - costMatrix[t7][t8];
-                        if (Double.compare(delta1 + delta2, 0) < 0){
-                            tree.nonSequ4Exhange(t1,t2,t3,t4,t5,t6,t7,t8);
-                            objective += delta1 + delta2;
-                            return true;
+                        double delta22 = costMatrix[t6][t8] + costMatrix[t7][t5]
+                                - costMatrix[t5][t6] - costMatrix[t7][t8];
+                        if (Double.compare(delta2, delta22) <= 0) {
+                            if (Double.compare(delta1 + delta2, 0) < 0) {
+                                tree.nonSequ4Exchange(t1, t2, t3, t4, t5, t6, t7, t8);
+                                objective += delta1 + delta2;
+                                return true;
+                            }
+                        }else{
+                            if (Double.compare(delta1 + delta22, 0) < 0) {
+                                tree.nonSequ4Exchange2(t1, t2, t3, t4, t5, t6, t7, t8);
+                                objective += delta1 + delta22;
+                                return true;
+                            }
                         }
                     }
                 }

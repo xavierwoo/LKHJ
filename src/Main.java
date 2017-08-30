@@ -90,18 +90,44 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         //testRandom();
-        //testFileInstance();
+        testFileInstance();
+//
+//        int[] tour = new int[200];
+//
+//        for (int i=0; i < tour.length; ++i){
+//            tour[i] = i;
+//        }
 
-        int[] tour = new int[100];
+//        TwoLevelTree tree = new TwoLevelTree(tour);
+//        tree.printTour();
+//        tree.nonSequ4Exchange2(0,1,7,8,11,12,3,4);
+//        tree.printTour();
+//        System.out.println(tree.checkTree());
 
-        for (int i=0; i < tour.length; ++i){
-            tour[i] = i;
-        }
 
-        TwoLevelTree tree = new TwoLevelTree(tour);
-        tree.printTour();
-        tree.nonSequ4Exhange(0,1,6,7,8,9,3,4);
-        tree.printTour();
-        System.out.println(tree.checkTree());
+////
+//        TwoLevelTree tree = new TwoLevelTree(tour);
+//        for (int t1 = 0; t1 < tour.length-4; ++t1){
+//            int t2 = t1+1;
+//            for (int t3 = t2 + 2; t3 < tour.length - 3; ++t3){
+//                int t4 = t3 + 1;
+//                for (int t5 = t4; t5 < tour.length - 2; ++t5){
+//                    int t6 = t5+1;
+//                    for (int t7 = t2; t7 < t3-1; ++t7){
+//                        int t8 = t7+1;
+//
+//                        int[] t = tree.getCurrentTour();
+//                        tree.nonSequ4Exchange(t[t1], t[t2], t[t3], t[t4], t[t5], t[t6],t[t7],t[t8]);
+//                        //tree.printTour();
+//                        if  (!tree.checkTree()){
+//                            System.out.println(t1 +" " +
+//                                    t2 + " " + t3 + " " + t4 + " " +
+//                                    t5 + " " + t6 + " " + t7 + " " + t8);
+//                            throw new Error();
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 }

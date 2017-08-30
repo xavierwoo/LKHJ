@@ -61,7 +61,7 @@ public class TwoLevelTree {
                 between(t1, t7, t3) && between(t7, t3, t5) && between(t3, t5, t1) && between(t5, t1, t7);
     }
 
-    public void nonSequ4Exhange(int t1, int t2, int t3, int t4, int t5, int t6, int t7, int t8) {
+    public void nonSequ4Exchange(int t1, int t2, int t3, int t4, int t5, int t6, int t7, int t8) {
         if (!isFeasibleNS4E(t1, t2, t3, t4, t5, t6, t7, t8)) {
             throw new Error("Infeasible 4 exchange: " + t1 +" " +
                     t2 + " " + t3 + " " + t4 + " " +
@@ -89,7 +89,7 @@ public class TwoLevelTree {
             nonCon4ExchangeInSegment(t1, t2, t3, t4, t5, t6, t7, t8);
         } else {
             ArrayList<Parent> smallP = splitToFitNS4Exchange(t1, t2, t3, t4, t5, t6, t7, t8);
-            nonSequ4Exhange(t1, t2, t3, t4, t5, t6, t7, t8);
+            nonSequ4Exchange(t1, t2, t3, t4, t5, t6, t7, t8);
             mergeParents(smallP);
         }
     }
@@ -168,6 +168,103 @@ public class TwoLevelTree {
         conParentFor4Exchange(t5p, t8p);
         conParentFor4Exchange(t3p, t2p);
         conParentFor4Exchange(t7p, t6p);
+        reSortAllParentID();
+    }
+
+
+    public void nonSequ4Exchange2(int t1, int t2, int t3, int t4, int t5, int t6, int t7, int t8) {
+        if (!isFeasibleNS4E(t1, t2, t3, t4, t5, t6, t7, t8)) {
+            throw new Error("Infeasible 4 exchange type 2: " + t1 + " " +
+                    t2 + " " + t3 + " " + t4 + " " +
+                    t5 + " " + t6 + " " + t7 + " " + t8);
+        }
+
+        //if the operate consist of a sequence of consecutive segments
+        if (citysElements[t1].parent != citysElements[t2].parent
+                && citysElements[t3].parent != citysElements[t4].parent
+                && citysElements[t5].parent != citysElements[t6].parent
+                && citysElements[t7].parent != citysElements[t8].parent) {
+            rearrangeSegments2(citysElements[t1].parent, citysElements[t2].parent,
+                    citysElements[t3].parent, citysElements[t4].parent,
+                    citysElements[t5].parent, citysElements[t6].parent,
+                    citysElements[t7].parent, citysElements[t8].parent);
+
+        }else if(citysElements[t1].parent == citysElements[t2].parent
+                && citysElements[t1].parent == citysElements[t3].parent
+                && citysElements[t1].parent == citysElements[t4].parent
+                && citysElements[t1].parent == citysElements[t5].parent
+                && citysElements[t1].parent == citysElements[t6].parent
+                && citysElements[t1].parent == citysElements[t7].parent
+                && citysElements[t1].parent == citysElements[t8].parent){
+            nonCon4ExchangeInSegment2(t1, t2, t3, t4, t5, t6, t7, t8);
+        }else{
+            ArrayList<Parent> smallP = splitToFitNS4Exchange(t1,t2,t3,t4,t5,t6,t7,t8);
+            nonSequ4Exchange2(t1,t2,t3,t4,t5,t6,t7,t8);
+            mergeParents(smallP);
+        }
+    }
+
+    private void nonCon4ExchangeInSegment2(int t1, int t2,
+                                          int t3, int t4,
+                                          int t5, int t6,
+                                          int t7, int t8) {
+        revertPathInSegment(t2,t7);
+        revertPathInSegment(t8,t3);
+        conElementsInSegment(t1, t4);
+        conElementsInSegment(t5, t7);
+        conElementsInSegment(t2, t3);
+        conElementsInSegment(t8, t6);
+        resortElemID(citysElements[t1].parent);
+    }
+
+
+    private void revertPathInSegment(int a, int c){
+        Element currElem = citysElements[a];
+        Element nextNextElem = currElem.parent.isReverse ?
+                currElem.previousElement
+                :
+                currElem.nextElement;
+        do {
+            if (currElem.parent.isReverse) {
+                Element nextElem = nextNextElem;
+                nextNextElem = nextElem.parent.isReverse ? nextElem.previousElement : nextElem.nextElement;
+                currElem.nextElement = nextElem;
+                nextElem.previousElement = currElem;
+            } else {
+                Element nextElem = nextNextElem;
+                nextNextElem = nextElem.parent.isReverse ? nextElem.previousElement : nextElem.nextElement;
+                currElem.previousElement = nextElem;
+                nextElem.nextElement = currElem;
+            }
+            currElem = nextNextElem.parent.isReverse ? nextNextElem.nextElement : nextNextElem.previousElement;
+        } while (currElem.cityID != c);
+    }
+
+    private void revertPath(Parent aParent, Parent cParent){
+        Parent currPar = aParent;
+        Parent nextNextPar = aParent.nextParent;
+
+        while(currPar != cParent){
+            Parent nextPar = nextNextPar;
+            nextNextPar = nextPar.nextParent;
+            currPar.previousParent = nextPar;
+            nextPar.nextParent = currPar;
+            currPar.isReverse = !currPar.isReverse;
+            currPar = nextNextPar.previousParent;
+        }
+        currPar.isReverse = !currPar.isReverse;
+    }
+
+    private void rearrangeSegments2(Parent t1p, Parent t2p,
+                                    Parent t3p, Parent t4p,
+                                    Parent t5p, Parent t6p,
+                                    Parent t7p, Parent t8p){
+        revertPath(t2p, t7p);
+        revertPath(t8p, t3p);
+        conParentFor4Exchange(t1p, t4p);
+        conParentFor4Exchange(t5p, t7p);
+        conParentFor4Exchange(t2p, t3p);
+        conParentFor4Exchange(t8p, t6p);
         reSortAllParentID();
     }
 
@@ -689,23 +786,11 @@ public class TwoLevelTree {
     }
 
     private void flipSegments(Parent aParent, Parent cParent) {
-        Parent currPar = aParent;
-        Parent nextNextPar = aParent.nextParent;
 
         Parent cNextPar = cParent.nextParent;
         Parent aPrevPar = aParent.previousParent;
 
-
-        while (currPar != cParent) {
-            Parent nextPar = nextNextPar;
-            nextNextPar = nextPar.nextParent;
-            currPar.previousParent = nextPar;
-            nextPar.nextParent = currPar;
-            currPar.isReverse = !currPar.isReverse;
-            currPar = nextNextPar.previousParent;
-        }
-
-        currPar.isReverse = !currPar.isReverse;
+        revertPath(aParent, cParent);
 
         aParent.nextParent = cNextPar;
         cNextPar.previousParent = aParent;
@@ -776,30 +861,13 @@ public class TwoLevelTree {
 
     private void flipWithinSegment(int a, int c) {
         Parent currParent = citysElements[a].parent;
-        Element currElem = citysElements[a];
+        Element currElem;
         Element preAElem = currParent.isReverse ?
                 citysElements[a].nextElement : citysElements[a].previousElement;
         Element nextCElem = currParent.isReverse ?
                 citysElements[c].previousElement : citysElements[c].nextElement;
-        Element nextNextElem = currElem.parent.isReverse ?
-                currElem.previousElement
-                :
-                currElem.nextElement;
 
-        do {
-            if (currElem.parent.isReverse) {
-                Element nextElem = nextNextElem;
-                nextNextElem = nextElem.parent.isReverse ? nextElem.previousElement : nextElem.nextElement;
-                currElem.nextElement = nextElem;
-                nextElem.previousElement = currElem;
-            } else {
-                Element nextElem = nextNextElem;
-                nextNextElem = nextElem.parent.isReverse ? nextElem.previousElement : nextElem.nextElement;
-                currElem.previousElement = nextElem;
-                nextElem.nextElement = currElem;
-            }
-            currElem = nextNextElem.parent.isReverse ? nextNextElem.nextElement : nextNextElem.previousElement;
-        } while (currElem.cityID != c);
+        revertPathInSegment(a, c);
 
         if (preAElem.parent.isReverse) {
             preAElem.previousElement = citysElements[c];
