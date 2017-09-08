@@ -35,8 +35,8 @@ class OneTree {
             double minDistance = Double.MAX_VALUE;
             int nearestNode = -1;
             for (int n = 0; n < costMatrix.length; ++n){
-                if (n != tn.father.data && n != tn.data && costMatrix[tn.data][n] < minDistance){
-                    minDistance = costMatrix[tn.data][n];
+                if (n != tn.father.data && n != tn.data && getCost(tn.data, n) < minDistance){
+                    minDistance = getCost(tn.data, n);//costMatrix[tn.data][n];
                     nearestNode = n;
                 }
             }
@@ -49,28 +49,6 @@ class OneTree {
 
         treeLength = spinningTreeLength + maxSpecial;
 
-//        double min[] = new double[2];
-//        min[0] = min[1] = Double.MAX_VALUE;
-//        for (int i=1; i<costMatrix.length; ++i){
-//            double edgeCost = costMatrix[0][i] + pi[i] + pi[0];
-//            if (edgeCost < min[0] && edgeCost < min[1]){
-//                if (min[0] < min[1]){
-//                    min[1] = edgeCost;
-//                    specialConnections[1] = i;
-//                }else{
-//                    min[0] = edgeCost;
-//                    specialConnections[0] = i;
-//                }
-//            }else if (edgeCost < min[0] && Double.compare(edgeCost, min[1]) >= 0){
-//                min[0] = edgeCost;
-//                specialConnections[0] = i;
-//            }else if (Double.compare(edgeCost, min[0]) >= 0 && edgeCost < min[1]){
-//                min[1] = edgeCost;
-//                specialConnections[1] = i;
-//            }
-//        }
-//
-//        treeLength = spinningTreeLength + min[0] + min[1];
         for (double pii : pi){
             treeLength -= 2 * pii;
         }
@@ -110,7 +88,7 @@ class OneTree {
 
             for (int w=0; w<costMatrix.length; ++w){
                 if (w == v || !isInQ[w])continue;
-                double edgeLength = costMatrix[v][w] + pi[v] + pi[w];
+                double edgeLength = getCost(v, w) + pi[v] + pi[w];
                 if (edgeLength < C[w]){
                     C[w] = edgeLength;
                     Q.decreaseKey(fbNodes.get(w), C[w]);
@@ -135,6 +113,10 @@ class OneTree {
         }else {
             return treeNodes[a].father == treeNodes[b] || treeNodes[b].father == treeNodes[a];
         }
+    }
+
+    private double getCost(int i, int j){
+        return i > j ? costMatrix[i][j] : costMatrix[j][i];
     }
 
     private class TreeNode{

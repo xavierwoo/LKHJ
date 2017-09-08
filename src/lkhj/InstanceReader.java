@@ -21,7 +21,10 @@ public class InstanceReader {
             }
         }
 
-        double[][] mat = new double[dimension][dimension];
+        double[][] mat = new double[dimension][];
+        for (int i=0; i < dimension; ++i){
+            mat[i] = new double[i+1];
+        }
         double[][] coors = new double[dimension][2];
         int count = 0;
         while (!(line = br.readLine()).equals("EOF")) {
@@ -33,11 +36,20 @@ public class InstanceReader {
 
         for (int i = 0; i < dimension; ++i) {
             for (int j = i + 1; j < dimension; ++j) {
-                mat[i][j] = mat[j][i] = Math.round(Math.sqrt(
+
+                setMat(mat, i, j, Math.round(Math.sqrt(
                         (coors[i][0] - coors[j][0]) * (coors[i][0] - coors[j][0])
-                                + (coors[i][1] - coors[j][1]) * (coors[i][1] - coors[j][1])));
+                                + (coors[i][1] - coors[j][1]) * (coors[i][1] - coors[j][1]))));
             }
         }
         return mat;
+    }
+
+    static private void setMat(double[][] mat, int i, int j, double value){
+        if (i > j){
+            mat[i][j] = value;
+        }else{
+            mat[j][i] = value;
+        }
     }
 }

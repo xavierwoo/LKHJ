@@ -58,7 +58,7 @@ public class LKHJ {
             final int index = i;
             ArrayList<Integer> line = candidatesTable.get(index);
             line.sort((Integer integer, Integer t1)
-                    ->Double.compare(costMatrix[index][integer] + pi[integer], costMatrix[index][t1] + pi[t1]));
+                    ->Double.compare(getCost(index, integer) + pi[integer], getCost(index, t1) + pi[t1]));
         }
 
         if (costMatrix.length > nearestCount) {
@@ -119,7 +119,7 @@ public class LKHJ {
 
         do{
             int nextCityID = tree.next(currCityID);
-            tourCost += costMatrix[currCityID][nextCityID];
+            tourCost += getCost(currCityID, nextCityID);//costMatrix[currCityID][nextCityID];
             currCityID = nextCityID;
         }while(currCityID != headCityID);
 
@@ -138,16 +138,16 @@ public class LKHJ {
 
     private FlipMove evaluateMove(int a, int b, int c, int d){
         return new FlipMove(a, b, c, d,
-                0 - costMatrix[a][b] - costMatrix[c][d] + costMatrix[a][d] + costMatrix[b][c]);
+                0 - getCost(a, b) - getCost(c, d) + getCost(a, d) + getCost(b,c));
     }
 
     private double checkCalcObjective(TwoLevelTree tree){
         int[] tour = tree.getCurrentTour();
         double obj = 0;
         for (int i=0; i< tour.length - 1; ++i){
-            obj += costMatrix[tour[i]][tour[i+1]];
+            obj += getCost(tour[i], tour[i+1]);//costMatrix[tour[i]][tour[i+1]];
         }
-        obj += costMatrix[tour[tour.length-1]][tour[0]];
+        obj += getCost(tour[tour.length-1], tour[0]);//costMatrix[tour[tour.length-1]][tour[0]];
 
         return obj;
     }
@@ -217,8 +217,8 @@ public class LKHJ {
                 if (t3 == t1)continue;
                 int t4 = tree.next(t3);
                 if (t4 == t1 || t4 == t2)continue;
-                double delta1 = costMatrix[t2][t3] + costMatrix[t4][t1]
-                        - costMatrix[t1][t2] - costMatrix[t3][t4];
+                double delta1 = getCost(t2, t3) + getCost(t4, t1)
+                        - getCost(t1, t2) - getCost(t3, t4);
                 if (Double.compare(delta1, 0) > 0)continue;
                 ArrayList<Integer> candidateT5 = tree.getPath(t4, t1);
                 for (int t5 : candidateT5){
@@ -227,10 +227,10 @@ public class LKHJ {
                         if (t7 == t5 || t7 == 4 || t7 == t3 || t7 == t2 || t7 ==  t1
                                 || !tree.between(t1, t7, t3))continue;
                         int t8 = tree.next(t7);
-                        double delta2 = costMatrix[t6][t7] + costMatrix[t8][t5]
-                                - costMatrix[t5][t6] - costMatrix[t7][t8];
-                        double delta22 = costMatrix[t6][t8] + costMatrix[t7][t5]
-                                - costMatrix[t5][t6] - costMatrix[t7][t8];
+                        double delta2 = getCost(t6,t7) + getCost(t8,t5)
+                                - getCost(t5, t6) - getCost(t7,t8);
+                        double delta22 = getCost(t6,t8) + getCost(t7,t5)
+                                - getCost(t5, t6) - getCost(t7,t8);
                         if (Double.compare(delta2, delta22) <= 0) {
                             if (Double.compare(delta1 + delta2, 0) < 0) {
                                 tree.nonSequ4Exchange(t1, t2, t3, t4, t5, t6, t7, t8);
@@ -312,19 +312,19 @@ public class LKHJ {
     private boolean tryT4IsPrevT3(int t1, int t2, int t3, int maxLevel){
         final int t4 = t1 == tree.next(t2) ? tree.prev(t3) : tree.next(t3);
         if (t4==t1 || t4==t2)return false;
-        final double x1 = costMatrix[t1][t2];
-        final double y1 = costMatrix[t2][t3];
-        final double x2 = costMatrix[t3][t4];
+        final double x1 = getCost(t1,t2);//costMatrix[t1][t2];
+        final double y1 = getCost(t2,t3);//costMatrix[t2][t3];
+        final double x2 = getCost(t3,t4);//costMatrix[t3][t4];
         for (int t5 : candidatesTable.get(t4)){
             if ((t1 == tree.next(t2) && !tree.between(t3,t5,t2))
                     ||
                     (t2 == tree.next(t1) && !tree.between(t2,t5,t3)))continue;
-            final double y2 = costMatrix[t4][t5];
+            final double y2 = getCost(t4,t5);//costMatrix[t4][t5];
             if (Double.compare(y2,x2) > 0) continue;
             int t6 = t1 == tree.next(t2) ? tree.prev(t5) : tree.next(t5);
             if (t6==t3)continue;
-            double x3 = costMatrix[t5][t6];
-            double y3 = costMatrix[t6][t1];
+            double x3 = getCost(t5,t6);//costMatrix[t5][t6];
+            double y3 = getCost(t6,t1);//costMatrix[t6][t1];
             if (Double.compare(y1+y2+y3, x1+x2+x3) < 0){
                 makeMove(evaluateMove(t1,t2,t4,t3));
                 makeMove(evaluateMove(t4,t2,t6,t5));
@@ -373,10 +373,10 @@ public class LKHJ {
                                  ArrayList<Edge> xs,
                                  ArrayList<Edge> ys,
                                  double sumDelta, int level, final int maxLevel, String star){
-        final double x1 = costMatrix[t1][t2];
+        final double x1 = getCost(t1, t2);//costMatrix[t1][t2];
         for (int t3 : candidatesTable.get(t2)) {
             if (t3 == t1 || xs.contains(new Edge(t2,t3)))continue;
-            final double y1 = costMatrix[t2][t3];
+            final double y1 = getCost(t2, t3);//costMatrix[t2][t3];
             if (Double.compare(y1,x1) > 0)continue;
             if (tryT4IsNextT3(t1, t2, t3,xs, ys, sumDelta, level, maxLevel, star)){
                 return true;
@@ -392,8 +392,9 @@ public class LKHJ {
     private OneTree initialize(){
         pi = new double[costMatrix.length];
         double v[] = new double[costMatrix.length];
+        double vPre[] = null;
         LB = -Double.MAX_VALUE;
-        double tk = 0.02;
+        double tk = 2;
         int period = costMatrix.length / 2;
 
         int iter = 0;
@@ -413,12 +414,17 @@ public class LKHJ {
                 firstPeriod = false;
             }
             calcV(tree, v);
+            if (vPre == null) vPre = Arrays.copyOf(v, v.length);
             if (subgradientIsOpt(v)){
                 System.out.println("Optima in Initialization");
                 break;
             }
 
-            updatePi(pi, tk, v);
+            updatePi(pi, tk, v, vPre);
+            double[] tmp = v;
+            v = vPre;
+            vPre = tmp;
+
             ++iter;
             if (iter == period){
                 iter = 0;
@@ -433,9 +439,9 @@ public class LKHJ {
         return bestTree;
     }
 
-    private void updatePi(double[] pi, double tk, double[] v){
+    private void updatePi(double[] pi, double tk, double[] v, double[] vPre){
         for (int i=0; i<pi.length; ++i){
-            pi[i] += tk * v[i];
+            pi[i] += tk * (0.7*v[i] + 0.3*vPre[i]);
         }
     }
 
@@ -450,6 +456,10 @@ public class LKHJ {
         for (int i=0; i<v.length; ++i){
             v[i] = tree.getDegree(i) - 2;
         }
+    }
+
+    private double getCost(int i, int j){
+        return i > j ? costMatrix[i][j] : costMatrix[j][i];
     }
 
     public int[] getCurrentTour(){
