@@ -172,9 +172,9 @@ public class LKHJ {
                 if (iter %1000 == 0){
                     printObjAndGap();
                 }
-                if (Math.abs(preObj - objective) < PRECISENESS){
-                    break;
-                }
+//                if (Math.abs(preObj - objective) < PRECISENESS){
+//                    break;
+//                }
                 preObj = objective;
             }
 
@@ -277,7 +277,7 @@ public class LKHJ {
                 !isFeasibleFlipMove(t1, t2, t3, t4)) return false;
 
         FlipMove fmv = evaluateMove(t1, t2, t3, t4);
-        if (fmv.deltaObj + sumDelta < 0) {
+        if (fmv.deltaObj + sumDelta < 0 - PRECISENESS) {
             makeMove(fmv);
             //printLog(level + star+ "-opt move! " + tree.checkTree());
             return true;
@@ -325,7 +325,7 @@ public class LKHJ {
             if (t6==t3)continue;
             double x3 = getCost(t5,t6);//costMatrix[t5][t6];
             double y3 = getCost(t6,t1);//costMatrix[t6][t1];
-            if (Double.compare(y1+y2+y3, x1+x2+x3) < 0){
+            if (Double.compare(y1+y2+y3, x1+x2+x3) < 0 - PRECISENESS){
                 makeMove(evaluateMove(t1,t2,t4,t3));
                 makeMove(evaluateMove(t4,t2,t6,t5));
                 makeMove(evaluateMove(t6,t2,t3,t1));
