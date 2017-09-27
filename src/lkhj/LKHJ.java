@@ -172,9 +172,9 @@ public class LKHJ {
                 if (iter %1000 == 0){
                     printObjAndGap();
                 }
-//                if (Math.abs(preObj - objective) < PRECISENESS){
-//                    break;
-//                }
+                if (Math.abs(preObj - objective) < PRECISENESS || preObj < objective){
+                    break;
+                }
                 preObj = objective;
             }
 
